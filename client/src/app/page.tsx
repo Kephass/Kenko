@@ -1,16 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Flame, Ruler, GlassWater, type LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import ProgressRing from "@/components/ProgressRing";
+import MacroInputs from "@/components/MacroInputs";
 import WeekStrip from "@/components/WeekStrip";
 import EmptyState from "@/components/EmptyState";
 import { MACROS } from "@/lib/macros";
 import { deriveDailyGoals } from "@/lib/goals";
 import { formatTime } from "@/lib/utils";
 import { useWeeklyBalance } from "@/hooks/useWeeklyBalance";
-import { useLogStreak, useTodayMealLogs } from "@/hooks/useMealLogs";
+import {
+  useDeleteMealLog,
+  useLogStreak,
+  useTodayMealLogs,
+  useUpdateMealLog,
+} from "@/hooks/useMealLogs";
 import { useTodayWater, waterTotal } from "@/hooks/useWaterLogs";
 import { useLatestMeasurement } from "@/hooks/useMeasurements";
 
@@ -38,6 +47,104 @@ function MacroCard({
           <Icon className="size-3.5" />
         </span>
       </ProgressRing>
+    </Card>
+  );
+}
+
+function MealCard({
+  meal,
+}: {
+  meal: { id: string; calories: number; protein_g: number | null; carbs_g: number | null; fat_g: number | null; logged_at: string };
+}) {
+  const [editing, setEditing] = useState(false);
+  const [values, setValues] = useState<Record<string, string> | null>(null);
+  const update = useUpdateMealLog();
+  const del = useDeleteMealLog();
+
+  if (!editing) {
+    return (
+      <Card
+        className="flex-row items-center justify-between p-4"
+        onClick={() => setEditing(true)}
+        role="button"
+      >
+        <div className="flex items-center gap-3">
+          <span className="flex size-9 items-center justify-center rounded-full bg-muted">
+            <Flame className="size-4" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold tabular-nums">{Math.round(Number(meal.calories))} calories</p>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              P {Math.round(Number(meal.protein_g ?? 0))}g · C {Math.round(Number(meal.carbs_g ?? 0))}g · F{" "}
+              {Math.round(Number(meal.fat_g ?? 0))}g
+            </p>
+          </div>
+        </div>
+        <span className="text-xs text-muted-foreground">{formatTime(meal.logged_at)}</span>
+      </Card>
+    );
+  }
+
+  const current = values ?? {
+    calories: String(Math.round(Number(meal.calories))),
+    protein: String(Math.round(Number(meal.protein_g ?? 0))),
+    carbs: String(Math.round(Number(meal.carbs_g ?? 0))),
+    fat: String(Math.round(Number(meal.fat_g ?? 0))),
+  };
+
+  return (
+    <Card className="space-y-3 p-4">
+      <div className="flex items-center gap-2">
+        <Input
+          className="h-10 w-24 border-0 bg-muted/60 text-lg font-extrabold tabular-nums shadow-none"
+          type="number"
+          inputMode="numeric"
+          value={current.calories}
+          onChange={(e) => setValues({ ...current, calories: e.target.value })}
+        />
+        <span className="text-sm font-semibold text-muted-foreground">cal</span>
+      </div>
+      <MacroInputs values={current} onChange={(key, value) => setValues({ ...current, [key]: value })} />
+      <div className="flex gap-2">
+        <Button
+          className="h-10 flex-1 rounded-full"
+          disabled={update.isPending}
+          onClick={() =>
+            update.mutate(
+              {
+                id: meal.id,
+                edits: {
+                  calories: Number(current.calories) || 0,
+                  protein_g: Number(current.protein) || 0,
+                  carbs_g: Number(current.carbs) || 0,
+                  fat_g: Number(current.fat) || 0,
+                },
+              },
+              { onSuccess: () => setEditing(false) },
+            )
+          }
+        >
+          Save
+        </Button>
+        <Button
+          variant="secondary"
+          className="h-10 flex-1 rounded-full bg-muted/60"
+          onClick={() => {
+            setEditing(false);
+            setValues(null);
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          className="h-10 rounded-full px-4"
+          disabled={del.isPending}
+          onClick={() => del.mutate(meal.id)}
+        >
+          Delete
+        </Button>
+      </div>
     </Card>
   );
 }
@@ -145,21 +252,7 @@ export default function Dashboard() {
           <EmptyState>Nothing logged today. Tap + to log your first meal.</EmptyState>
         )}
         {confirmed.map((m) => (
-          <Card key={m.id} className="flex-row items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <span className="flex size-9 items-center justify-center rounded-full bg-muted">
-                <Flame className="size-4" />
-              </span>
-              <div>
-                <p className="text-sm font-semibold tabular-nums">{Math.round(Number(m.calories))} calories</p>
-                <p className="text-xs text-muted-foreground tabular-nums">
-                  P {Math.round(Number(m.protein_g ?? 0))}g · C {Math.round(Number(m.carbs_g ?? 0))}g · F{" "}
-                  {Math.round(Number(m.fat_g ?? 0))}g
-                </p>
-              </div>
-            </div>
-            <span className="text-xs text-muted-foreground">{formatTime(m.logged_at)}</span>
-          </Card>
+          <MealCard key={m.id} meal={m} />
         ))}
       </section>
     </div>

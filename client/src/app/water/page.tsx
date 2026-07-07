@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import ProgressRing from "@/components/ProgressRing";
 import BackButton from "@/components/BackButton";
 import { useAddWater, useTodayWater, waterTotal } from "@/hooks/useWaterLogs";
-import { formatTime } from "@/lib/utils";
+import { errorMessage, formatTime } from "@/lib/utils";
 
 const QUICK = [250, 500, 750];
 const DAILY_GOAL_ML = 2000;
@@ -74,7 +74,7 @@ export default function WaterPage() {
           Log
         </Button>
       </form>
-      {add.isError && <p className="text-sm text-destructive">{String(add.error)}</p>}
+      {add.isError && <p className="text-sm text-destructive">{errorMessage(add.error)}</p>}
 
       <section className="space-y-3">
         {(water.data ?? []).map((w) => (
