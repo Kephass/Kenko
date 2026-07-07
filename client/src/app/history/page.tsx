@@ -125,11 +125,11 @@ export default function HistoryPage() {
 
       <Card className="items-center gap-2 p-4">
         <Calendar
-          className="w-full bg-transparent p-0 [--cell-radius:9999px]"
+          className="bg-transparent p-0 [--cell-radius:9999px]"
           classNames={{
             root: "w-full",
             day_button: "rounded-full",
-            today: "rounded-full bg-muted text-foreground",
+            today: "rounded-full bg-muted",
           }}
           mode="single"
           selected={selected}
