@@ -7,6 +7,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   useAddManualMealLog,
   useConfirmMealLog,
   useDiscardMealLog,
@@ -243,18 +250,19 @@ export default function LogPage() {
         <>
           <Card className="space-y-3 p-4">
             <p className="text-sm font-semibold">From your dishes</p>
-            <select
-              className="h-12 w-full rounded-full bg-muted/60 px-4 text-sm outline-none"
-              value={dishId}
-              onChange={(e) => setDishId(e.target.value)}
-            >
-              <option value="">No dish — enter macros below</option>
-              {(dishes.data ?? []).map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+            <Select value={dishId || "none"} onValueChange={(v) => setDishId(v === "none" ? "" : v)}>
+              <SelectTrigger className="h-12 w-full rounded-full border-0 bg-muted/60 px-4 shadow-none">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl">
+                <SelectItem value="none">No dish — enter macros below</SelectItem>
+                {(dishes.data ?? []).map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {dish && (
               <>
                 <Input
