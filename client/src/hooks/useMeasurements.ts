@@ -22,6 +22,23 @@ export function useMeasurements() {
   });
 }
 
+export function useLatestMeasurement() {
+  return useQuery({
+    queryKey: ["measurements", "latest"],
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("measurements")
+        .select("measurement_type, value_cm, logged_at")
+        .order("logged_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export function useAddMeasurement() {
   const qc = useQueryClient();
   const session = useSession();

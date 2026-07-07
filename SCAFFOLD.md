@@ -177,12 +177,13 @@ Page-by-page build order, roughly easiest-to-hardest:
 `client/.env.local` (not committed):
 ```
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 ```
 
-Note these are the public anon key, not the service role key - the client
-should only ever hold the anon key, protected by RLS. The service role key
-stays server-side in the edge function's secrets, never in client code.
+Note this is the publishable key (sb_publishable_..., successor to the
+legacy anon key) - the client should only ever hold this key, protected by
+RLS. The service role key stays server-side in the edge function's secrets,
+never in client code.
 
 ## Checklist
 

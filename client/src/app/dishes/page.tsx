@@ -1,6 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { Flame, Plus } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import EmptyState from "@/components/EmptyState";
 import { useAddDish, useDishes } from "@/hooks/useDishes";
 
 const EMPTY = {
@@ -16,110 +23,137 @@ export default function DishesPage() {
   const dishes = useDishes();
   const add = useAddDish();
   const [form, setForm] = useState(EMPTY);
-
-  const input = "w-full rounded border px-3 py-2 dark:bg-neutral-900 dark:border-neutral-700";
+  const [adding, setAdding] = useState(false);
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Dish library</h1>
-      <p className="text-sm text-neutral-500">
-        Your closed set. Photo matching only works for dishes in here (embeddings are generated
-        offline by scripts/generate_dish_embeddings.py).
-      </p>
+    <div className="space-y-5">
+      <div className="pt-1">
+        <h1 className="text-xl font-extrabold tracking-tight">My Dishes</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Your closed set — photo matching only works for dishes in here.
+        </p>
+      </div>
 
-      <form
-        className="space-y-2 rounded-lg border p-4 dark:border-neutral-700"
-        onSubmit={(e) => {
-          e.preventDefault();
-          add.mutate(
-            {
-              name: form.name,
-              calories_per_100g: Number(form.calories_per_100g),
-              protein_g_per_100g: Number(form.protein_g_per_100g) || 0,
-              carbs_g_per_100g: Number(form.carbs_g_per_100g) || 0,
-              fat_g_per_100g: Number(form.fat_g_per_100g) || 0,
-              reference_serving_g: form.reference_serving_g
-                ? Number(form.reference_serving_g)
-                : undefined,
-            },
-            { onSuccess: () => setForm(EMPTY) },
-          );
-        }}
-      >
-        <input
-          className={input}
-          placeholder="Dish name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-        />
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            className={input}
-            type="number"
-            placeholder="kcal / 100g"
-            value={form.calories_per_100g}
-            onChange={(e) => setForm({ ...form, calories_per_100g: e.target.value })}
-          />
-          <input
-            className={input}
-            type="number"
-            placeholder="protein g / 100g"
-            value={form.protein_g_per_100g}
-            onChange={(e) => setForm({ ...form, protein_g_per_100g: e.target.value })}
-          />
-          <input
-            className={input}
-            type="number"
-            placeholder="carbs g / 100g"
-            value={form.carbs_g_per_100g}
-            onChange={(e) => setForm({ ...form, carbs_g_per_100g: e.target.value })}
-          />
-          <input
-            className={input}
-            type="number"
-            placeholder="fat g / 100g"
-            value={form.fat_g_per_100g}
-            onChange={(e) => setForm({ ...form, fat_g_per_100g: e.target.value })}
-          />
-        </div>
-        <input
-          className={input}
-          type="number"
-          placeholder="Typical serving (g), optional"
-          value={form.reference_serving_g}
-          onChange={(e) => setForm({ ...form, reference_serving_g: e.target.value })}
-        />
-        <button
-          className="rounded bg-green-700 px-4 py-2 text-white disabled:opacity-50"
-          disabled={add.isPending || !form.name || !form.calories_per_100g}
-        >
-          Add dish
-        </button>
-        {add.isError && <p className="text-sm text-red-600">{String(add.error)}</p>}
-      </form>
-
-      <ul className="space-y-2">
-        {(dishes.data ?? []).map((d) => (
-          <li key={d.id} className="rounded-lg border p-3 text-sm dark:border-neutral-700">
-            <div className="flex justify-between">
-              <span className="font-medium">{d.name}</span>
-              <span className="tabular-nums text-neutral-500">
-                {Number(d.calories_per_100g)} kcal/100g
-              </span>
-            </div>
-            <div className="mt-1 flex justify-between text-xs text-neutral-500 tabular-nums">
-              <span>
-                P {Number(d.protein_g_per_100g)} · C {Number(d.carbs_g_per_100g)} · F{" "}
-                {Number(d.fat_g_per_100g)}
-              </span>
-              <span>{d.embedding ? "matchable" : "no embedding yet"}</span>
-            </div>
-          </li>
-        ))}
-      </ul>
-      {dishes.data?.length === 0 && (
-        <p className="text-sm text-neutral-500">No dishes yet - add the ones you actually eat on repeat.</p>
+      {!adding && (
+        <Button className="h-12 w-full rounded-full" onClick={() => setAdding(true)}>
+          <Plus className="size-4" /> Add dish
+        </Button>
       )}
+
+      {adding && (
+        <Card className="space-y-4 p-5">
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              add.mutate(
+                {
+                  name: form.name,
+                  calories_per_100g: Number(form.calories_per_100g),
+                  protein_g_per_100g: Number(form.protein_g_per_100g) || 0,
+                  carbs_g_per_100g: Number(form.carbs_g_per_100g) || 0,
+                  fat_g_per_100g: Number(form.fat_g_per_100g) || 0,
+                  reference_serving_g: form.reference_serving_g
+                    ? Number(form.reference_serving_g)
+                    : undefined,
+                },
+                {
+                  onSuccess: () => {
+                    setForm(EMPTY);
+                    setAdding(false);
+                  },
+                },
+              );
+            }}
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="name">Dish name</Label>
+              <Input
+                id="name"
+                className="h-11 rounded-xl"
+                placeholder="e.g. Jollof rice with chicken"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {(
+                [
+                  ["calories_per_100g", "Calories / 100g"],
+                  ["protein_g_per_100g", "Protein g / 100g"],
+                  ["carbs_g_per_100g", "Carbs g / 100g"],
+                  ["fat_g_per_100g", "Fat g / 100g"],
+                ] as const
+              ).map(([key, label]) => (
+                <div key={key} className="space-y-1.5">
+                  <Label htmlFor={key}>{label}</Label>
+                  <Input
+                    id={key}
+                    className="h-11 rounded-xl"
+                    type="number"
+                    value={form[key]}
+                    onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="serving">Typical serving (g, optional)</Label>
+              <Input
+                id="serving"
+                className="h-11 rounded-xl"
+                type="number"
+                value={form.reference_serving_g}
+                onChange={(e) => setForm({ ...form, reference_serving_g: e.target.value })}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                className="h-11 flex-1 rounded-full"
+                disabled={add.isPending || !form.name || !form.calories_per_100g}
+              >
+                Save dish
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-11 rounded-full"
+                onClick={() => setAdding(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+            {add.isError && <p className="text-sm text-destructive">{String(add.error)}</p>}
+          </form>
+        </Card>
+      )}
+
+      <section className="space-y-3">
+        {(dishes.data ?? []).map((d) => (
+          <Card key={d.id} className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <span className="flex size-9 items-center justify-center rounded-full bg-muted">
+                <Flame className="size-4" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold">{d.name}</p>
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {Math.round(Number(d.calories_per_100g))} cal/100g · P{" "}
+                  {Math.round(Number(d.protein_g_per_100g))} · C {Math.round(Number(d.carbs_g_per_100g))} · F{" "}
+                  {Math.round(Number(d.fat_g_per_100g))}
+                </p>
+              </div>
+            </div>
+            <Badge variant="secondary" className="rounded-full text-[10px]">
+              {d.embedding ? "matchable" : "no embedding"}
+            </Badge>
+          </Card>
+        ))}
+        {dishes.data?.length === 0 && (
+          <EmptyState>No dishes yet — add the ones you actually eat on repeat.</EmptyState>
+        )}
+      </section>
     </div>
   );
 }
