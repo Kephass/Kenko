@@ -1,20 +1,5 @@
-// ============================================================================
-// Kenko: log-meal edge function - the pipeline's one server-side brain.
-//
-// The client POSTs a meal photo (and/or free text). This function:
-//   1. embeds the photo                                  [provider stubbed]
-//   2. runs a pgvector similarity search against the caller's own dish library
-//   3a. known dish  -> recipe nutrition x calibration multiplier
-//   3b. new dish    -> retrieve grounding ingredients, ask a frontier model
-//                      to reason over them               [provider stubbed]
-//   4. inserts a DRAFT meal_logs row (confirmed = false); the client shows it
-//      for confirmation and patches confirmed = true directly via supabase-js.
-//
-// The two provider functions below are deliberate placeholders pending a
-// personal accuracy bake-off (see scripts/bakeoff.py). Everything around
-// them - branching, grounding retrieval, cost logging, the draft-row
-// contract - is the real logic.
-// ============================================================================
+// log-meal: embed photo -> pgvector match -> known-dish or grounded-reasoning
+// path -> insert draft meal_logs row (confirmed=false) for the client to confirm.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -33,28 +18,17 @@ interface LogMealRequest {
   dishwareId?: string;
 }
 
-// ----------------------------------------------------------------------------
-// AI providers - STUBS. Wire in the bake-off winner here.
-// ----------------------------------------------------------------------------
+// AI provider stubs - wire in the bake-off winner (scripts/bakeoff.py).
 
-/**
- * Embed a meal photo into the same vector space as dishes.embedding.
- * Must return a vector whose dimension matches the schema (vector(768) by
- * default - change both together if the chosen model differs).
- */
+/** Embed a meal photo; dimension must match dishes.embedding (vector(768)). */
 async function embedMealPhoto(_imageBase64: string): Promise<number[]> {
-  // TODO: call the embedding provider chosen by scripts/bakeoff.py, then
-  // record the call via logAiCall(..., "embedding", ...).
+  // TODO: call the chosen embedding provider and record it via logAiCall().
   throw new Error(
     "embedMealPhoto is not wired to a provider yet - run scripts/bakeoff.py, pick a winner, and implement this call.",
   );
 }
 
-/**
- * Frontier-model reasoning for a dish that didn't match the personal library:
- * given the photo/text plus retrieved reference ingredients, estimate the
- * dish's nutrition. Grounded in the provided rows, not the model's memory.
- */
+/** Estimate an unmatched dish's nutrition, grounded in the retrieved ingredient rows. */
 async function reasonOverUnfamiliarDish(_input: {
   imageBase64?: string;
   textInput?: string;
@@ -67,16 +41,13 @@ async function reasonOverUnfamiliarDish(_input: {
   fat_g: number;
   fiber_g: number;
 }> {
-  // TODO: call the frontier model chosen by the bake-off with the grounding
-  // rows in the prompt, then record the call via logAiCall(..., "reasoning", ...).
+  // TODO: call the chosen frontier model with the grounding rows; log via logAiCall().
   throw new Error(
     "reasonOverUnfamiliarDish is not wired to a provider yet - see scripts/bakeoff.py.",
   );
 }
 
-// ----------------------------------------------------------------------------
-// Cost guardrail: every provider call gets a row in ai_call_log
-// ----------------------------------------------------------------------------
+// Cost guardrail: every provider call gets a row in ai_call_log.
 async function logAiCall(
   userId: string,
   provider: string,
@@ -95,9 +66,6 @@ async function logAiCall(
   });
 }
 
-// ----------------------------------------------------------------------------
-// Handler
-// ----------------------------------------------------------------------------
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -143,8 +111,7 @@ Deno.serve(async (req) => {
     );
     if (matchError) throw matchError;
 
-    // Portion estimation is deliberately deferred: assume a typical portion
-    // until dishware fill-level comparison is built (see PROJECT.md).
+    // Portion estimation deferred: assume a typical portion until dishware comparison exists.
     const portionRatio = 1.0;
 
     let draft;

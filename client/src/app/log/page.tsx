@@ -3,15 +3,8 @@
 import { useState } from "react";
 import { useConfirmMealLog, useDiscardMealLog, useLogMeal } from "@/hooks/useMealLogs";
 
-/**
- * Meal logging: camera/text -> POST log-meal -> show the draft for
- * confirmation. The edge function inserts the row (confirmed=false); the
- * confirm button here is a plain UPDATE on that same row, not a re-submit.
- *
- * On failure the captured photo/text stays in local state with an explicit
- * retry - never auto-retried, since a lost response after a successful AI
- * call would create a duplicate log.
- */
+// Camera/text -> POST log-meal -> confirm screen; confirming is an UPDATE on
+// the draft row, and failed captures stay in state for an explicit retry.
 export default function LogPage() {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [text, setText] = useState("");

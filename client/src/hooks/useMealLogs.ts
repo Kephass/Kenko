@@ -30,8 +30,7 @@ export function useTodayMealLogs() {
 export function useLogMeal() {
   const session = useSession();
   return useMutation({
-    // No automatic retry: a lost response after a successful AI call would
-    // duplicate the log. The page surfaces the failure for an explicit retry.
+    // No auto-retry: a lost response after a successful AI call would duplicate the log.
     retry: false,
     mutationFn: async (input: { imageBase64?: string; textInput?: string; dishwareId?: string }) => {
       const { data, error } = await supabase.functions.invoke("log-meal", {
