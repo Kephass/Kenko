@@ -135,7 +135,8 @@ data-flow design behind what follows - this section stays purely mechanical.
 pnpm create next-app@latest client --typescript --tailwind --app --import-alias "@/*"
 cd client
 pnpm add @supabase/supabase-js
-pnpm add -D next-pwa
+# For offline support later, use @serwist/turbopack - next-pwa is
+# webpack-only and does nothing under Next 16's Turbopack builds.
 ```
 
 `src/lib/supabase.ts`:
