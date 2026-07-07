@@ -9,6 +9,7 @@ import BackButton from "@/components/BackButton";
 import { errorMessage, formatDate } from "@/lib/utils";
 import {
   useAddMeasurement,
+  useBodyFat,
   useMeasurements,
   type MeasurementType,
 } from "@/hooks/useMeasurements";
@@ -19,6 +20,7 @@ export default function MeasurementsPage() {
   const [type, setType] = useState<MeasurementType>("waist");
   const [value, setValue] = useState("");
   const measurements = useMeasurements();
+  const bodyFat = useBodyFat();
   const add = useAddMeasurement();
 
   return (
@@ -32,6 +34,16 @@ export default function MeasurementsPage() {
           Waist, neck and hip also drive the body-fat estimate.
         </p>
       </div>
+
+      {bodyFat.data != null && (
+        <Card className="flex-row items-center justify-between p-4">
+          <div>
+            <p className="text-2xl font-extrabold tabular-nums">{Number(bodyFat.data).toFixed(1)}%</p>
+            <p className="text-xs text-muted-foreground">Estimated body fat</p>
+          </div>
+          <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">Navy method</span>
+        </Card>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {TYPES.map((t) => (

@@ -18,11 +18,11 @@ The app's core loop, with zero AI. Everything else depends on this.
 
 ## Phase 2 — Progress & analytics
 
-- [ ] Migration: `recompute_weight_trend()` + AFTER trigger (backfill-safe EWMA); `daily_nutrition_summary()` RPC
-- [ ] WeekStrip: tappable days with real progress rings; `selectedDate` drives the dashboard
-- [ ] `/history`: month calendar, calorie/macro charts, weight + measurement trends
-- [ ] Body-fat estimate surfaced on `/weight` and `/measurements` (`latest_body_fat_estimate`)
-- [ ] Weigh-in backfill (date input)
+- [x] Migration: `recompute_weight_trend()` + AFTER trigger (backfill-safe EWMA); `daily_nutrition_summary()` RPC
+- [x] WeekStrip: tappable days with real progress rings; `selectedDate` drives the dashboard
+- [x] `/history`: month calendar, calorie/macro charts, weight + measurement trends
+- [x] Body-fat estimate surfaced on `/weight` and `/measurements` (`latest_body_fat_estimate`)
+- [x] Weigh-in backfill (date input)
 
 ## Phase 3 — PWA install + offline
 

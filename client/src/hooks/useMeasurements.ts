@@ -49,6 +49,26 @@ export function useAddMeasurement() {
         .insert({ user_id: session!.user.id, ...input });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["measurements"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["measurements"] });
+      qc.invalidateQueries({ queryKey: ["body_fat"] });
+    },
+  });
+}
+
+/** Navy-method estimate from latest waist/neck(/hip) + profile height; null until those exist. */
+export function useBodyFat() {
+  const session = useSession();
+  return useQuery({
+    queryKey: ["body_fat"],
+    enabled: !!session,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("latest_body_fat_estimate", {
+        p_user_id: session!.user.id,
+      });
+      if (error) throw error;
+      return data as number | null;
+    },
   });
 }

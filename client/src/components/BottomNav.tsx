@@ -7,7 +7,7 @@ import { useSession } from "@/components/Providers";
 
 const links = [
   { href: "/", label: "Home", Icon: Home },
-  { href: "/weight", label: "Progress", Icon: ChartColumn },
+  { href: "/history", label: "Progress", Icon: ChartColumn },
   { href: "/dishes", label: "Dishes", Icon: UtensilsCrossed },
   { href: "/settings", label: "Settings", Icon: Settings },
 ];

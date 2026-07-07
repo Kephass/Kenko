@@ -499,6 +499,23 @@ export type Database = {
         }
         Returns: number
       }
+      daily_nutrition_summary: {
+        Args: {
+          p_end: string
+          p_start: string
+          p_tz?: string
+          p_user_id: string
+        }
+        Returns: {
+          calories: number
+          carbs_g: number
+          day: string
+          fat_g: number
+          fiber_g: number
+          meal_count: number
+          protein_g: number
+        }[]
+      }
       estimate_body_fat_navy: {
         Args: {
           height_cm: number
@@ -529,6 +546,7 @@ export type Database = {
           similarity: number
         }[]
       }
+      recompute_weight_trend: { Args: { p_user_id: string }; Returns: undefined }
       weekly_energy_balance: {
         Args: { p_as_of?: string; p_user_id: string }
         Returns: {
