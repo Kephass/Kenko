@@ -1,6 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import EmptyState from "@/components/EmptyState";
+import { formatDate } from "@/lib/utils";
 import {
   useAddMeasurement,
   useMeasurements,
@@ -16,11 +21,28 @@ export default function MeasurementsPage() {
   const add = useAddMeasurement();
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Measurements</h1>
-      <p className="text-sm text-neutral-500">
-        Waist + neck (+ hip) also drive the Navy body-fat estimate used for BMR.
-      </p>
+    <div className="space-y-5">
+      <div className="pt-1">
+        <h1 className="text-xl font-extrabold tracking-tight">Measurements</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Waist, neck and hip also drive the body-fat estimate.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {TYPES.map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setType(t)}
+            className={`rounded-full px-4 py-2 text-sm font-medium capitalize transition-colors ${
+              type === t ? "bg-foreground text-background" : "bg-card text-muted-foreground shadow-sm"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
 
       <form
         className="flex gap-2"
@@ -33,47 +55,34 @@ export default function MeasurementsPage() {
             );
         }}
       >
-        <select
-          className="rounded border px-3 py-2 dark:bg-neutral-900 dark:border-neutral-700"
-          value={type}
-          onChange={(e) => setType(e.target.value as MeasurementType)}
-        >
-          {TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-        <input
-          className="flex-1 rounded border px-3 py-2 dark:bg-neutral-900 dark:border-neutral-700"
+        <Input
+          className="h-12 rounded-full bg-card px-5 shadow-sm"
           type="number"
           step="0.1"
-          placeholder="cm"
+          placeholder={`${type} (cm)`}
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />
-        <button
-          className="rounded bg-green-700 px-4 py-2 text-white disabled:opacity-50"
-          disabled={add.isPending || !value}
-        >
+        <Button className="h-12 rounded-full px-6" disabled={add.isPending || !value}>
           Log
-        </button>
+        </Button>
       </form>
-      {add.isError && <p className="text-sm text-red-600">{String(add.error)}</p>}
+      {add.isError && <p className="text-sm text-destructive">{String(add.error)}</p>}
 
-      <ul className="space-y-1 text-sm">
+      <section className="space-y-3">
         {(measurements.data ?? []).map((m) => (
-          <li key={m.id} className="flex justify-between border-b py-1 last:border-0 dark:border-neutral-800">
-            <span>
-              {m.measurement_type}
-              <span className="ml-2 text-neutral-500">
-                {new Date(m.logged_at).toLocaleDateString()}
-              </span>
-            </span>
-            <span className="tabular-nums">{Number(m.value_cm).toFixed(1)} cm</span>
-          </li>
+          <Card key={m.id} className="flex items-center justify-between p-4">
+            <div>
+              <p className="text-sm font-semibold capitalize">{m.measurement_type}</p>
+              <p className="text-xs text-muted-foreground">{formatDate(m.logged_at)}</p>
+            </div>
+            <span className="text-sm font-semibold tabular-nums">{Number(m.value_cm).toFixed(1)} cm</span>
+          </Card>
         ))}
-      </ul>
+        {measurements.data?.length === 0 && (
+          <EmptyState>No measurements yet. Pick a type and log the first one.</EmptyState>
+        )}
+      </section>
     </div>
   );
 }

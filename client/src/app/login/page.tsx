@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -29,40 +31,47 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto mt-16 max-w-sm space-y-4">
-      <h1 className="text-2xl font-semibold">Kenko</h1>
-      <p className="text-sm text-neutral-500">Sign in to your own data. Nothing here is shared.</p>
-      <input
-        className="w-full rounded border px-3 py-2 dark:bg-neutral-900 dark:border-neutral-700"
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        className="w-full rounded border px-3 py-2 dark:bg-neutral-900 dark:border-neutral-700"
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <div className="flex gap-2">
-        <button
-          className="flex-1 rounded bg-green-700 px-3 py-2 text-white disabled:opacity-50"
+    <div className="mx-auto mt-24 max-w-sm space-y-5">
+      <div className="text-center">
+        <h1 className="text-3xl font-extrabold tracking-tight">Kenko</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Your food, your data. Nothing here is shared.
+        </p>
+      </div>
+      <div className="space-y-3">
+        <Input
+          className="h-12 rounded-xl bg-card shadow-sm"
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Input
+          className="h-12 rounded-xl bg-card shadow-sm"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
+      <div className="space-y-2">
+        <Button
+          className="h-12 w-full rounded-full"
           disabled={busy || !email || !password}
           onClick={() => submit("signIn")}
         >
           Sign in
-        </button>
-        <button
-          className="flex-1 rounded border px-3 py-2 disabled:opacity-50 dark:border-neutral-700"
+        </Button>
+        <Button
+          variant="secondary"
+          className="h-12 w-full rounded-full bg-card shadow-sm"
           disabled={busy || !email || !password}
           onClick={() => submit("signUp")}
         >
           Sign up
-        </button>
+        </Button>
       </div>
-      {message && <p className="text-sm text-amber-700 dark:text-amber-400">{message}</p>}
+      {message && <p className="text-center text-sm text-muted-foreground">{message}</p>}
     </div>
   );
 }

@@ -3,12 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/components/Providers";
-
-function todayStart() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
+import { todayStart } from "@/lib/utils";
 
 export function useTodayMealLogs() {
   return useQuery({

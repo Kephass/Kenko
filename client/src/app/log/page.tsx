@@ -1,6 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { Camera, Flame } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { MACROS } from "@/lib/macros";
 import { useConfirmMealLog, useDiscardMealLog, useLogMeal } from "@/hooks/useMealLogs";
 
 // Camera/text -> POST log-meal -> confirm screen; confirming is an UPDATE on
@@ -39,46 +43,74 @@ export default function LogPage() {
 
   if (draft && !confirm.isSuccess) {
     return (
-      <div className="space-y-4">
-        <h1 className="text-2xl font-semibold">Confirm this meal?</h1>
-        <div className="rounded-lg border p-4 text-sm dark:border-neutral-700">
-          <p className="text-2xl tabular-nums">{Math.round(Number(draft.calories))} kcal</p>
-          <p className="mt-1 text-neutral-500 tabular-nums">
-            P {Number(draft.protein_g ?? 0)} · C {Number(draft.carbs_g ?? 0)} · F{" "}
-            {Number(draft.fat_g ?? 0)} g
-          </p>
+      <div className="space-y-5">
+        <h1 className="pt-1 text-xl font-extrabold tracking-tight">Confirm this meal?</h1>
+
+        <Card className="space-y-4 p-6">
+          <div className="flex items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-full bg-muted">
+              <Flame className="size-5" />
+            </span>
+            <p className="text-4xl font-extrabold tabular-nums">
+              {Math.round(Number(draft.calories))}
+              <span className="ml-1 text-base font-semibold text-muted-foreground">cal</span>
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {MACROS.map(({ key, label, colorClass, Icon }) => (
+              <div key={key} className="rounded-2xl bg-muted/60 p-3 text-center">
+                <Icon className={`mx-auto size-4 ${colorClass}`} />
+                <p className="mt-1 text-sm font-bold tabular-nums">
+                  {Math.round(Number(draft[`${key}_g`] ?? 0))}g
+                </p>
+                <p className="text-[11px] text-muted-foreground">{label}</p>
+              </div>
+            ))}
+          </div>
           {draft.match_confidence && (
-            <p className="mt-1 text-xs text-neutral-500">
-              match confidence {(Number(draft.match_confidence) * 100).toFixed(0)}%
+            <p className="text-xs text-muted-foreground">
+              Match confidence {(Number(draft.match_confidence) * 100).toFixed(0)}%
             </p>
           )}
-        </div>
+        </Card>
+
         <div className="flex gap-2">
-          <button
-            className="flex-1 rounded bg-green-700 px-4 py-2 text-white disabled:opacity-50"
+          <Button
+            className="h-12 flex-1 rounded-full"
             disabled={confirm.isPending}
             onClick={() => confirm.mutate({ id: draft.id }, { onSuccess: reset })}
           >
             Confirm
-          </button>
-          <button
-            className="flex-1 rounded border px-4 py-2 dark:border-neutral-700"
+          </Button>
+          <Button
+            variant="secondary"
+            className="h-12 flex-1 rounded-full bg-card shadow-sm"
             disabled={discard.isPending}
             onClick={() => discard.mutate(draft.id, { onSuccess: reset })}
           >
             Discard
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Log a meal</h1>
+    <div className="space-y-5">
+      <h1 className="pt-1 text-xl font-extrabold tracking-tight">Log a meal</h1>
 
-      <label className="block rounded-lg border-2 border-dashed p-6 text-center text-sm text-neutral-500 dark:border-neutral-700">
-        {imageBase64 ? "Photo captured ✓ (tap to retake)" : "Take a photo of your meal"}
+      <label className="block cursor-pointer">
+        <Card className="flex flex-col items-center gap-3 p-10 text-center">
+          <span className="flex size-14 items-center justify-center rounded-full bg-foreground text-background">
+            <Camera className="size-6" />
+          </span>
+          <div>
+            <p className="font-semibold">{imageBase64 ? "Photo captured ✓" : "Scan your meal"}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {imageBase64 ? "Tap to retake" : "Fit the whole plate in frame with good lighting"}
+            </p>
+          </div>
+        </Card>
         <input
           type="file"
           accept="image/*"
@@ -89,31 +121,29 @@ export default function LogPage() {
       </label>
 
       <textarea
-        className="w-full rounded border px-3 py-2 text-sm dark:bg-neutral-900 dark:border-neutral-700"
+        className="w-full rounded-3xl border-0 bg-card p-4 text-sm shadow-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
         rows={2}
-        placeholder='Optional note, e.g. "one and a half plates" (text-only parsing not implemented yet)'
+        placeholder="Describe what you ate (optional)"
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
 
-      <button
-        className="w-full rounded bg-green-700 px-4 py-3 text-white disabled:opacity-50"
+      <Button
+        className="h-12 w-full rounded-full"
         disabled={logMeal.isPending || (!imageBase64 && !text)}
         onClick={submit}
       >
         {logMeal.isPending ? "Analyzing…" : "Analyze meal"}
-      </button>
+      </Button>
 
       {logMeal.isError && (
-        <div className="rounded border border-red-300 p-3 text-sm text-red-700 dark:border-red-900 dark:text-red-400">
-          <p>{(logMeal.error as Error).message}</p>
-          <p className="mt-1 text-neutral-500">
-            Your photo and note are still here - fix the issue and retry.
-          </p>
-          <button className="mt-2 underline" onClick={submit}>
+        <Card className="space-y-2 p-4 text-sm">
+          <p className="font-medium text-destructive">{(logMeal.error as Error).message}</p>
+          <p className="text-muted-foreground">Your photo and note are still here — retry when ready.</p>
+          <Button variant="secondary" size="sm" className="rounded-full" onClick={submit}>
             Retry
-          </button>
-        </div>
+          </Button>
+        </Card>
       )}
     </div>
   );

@@ -1,16 +1,60 @@
 "use client";
 
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import EmptyState from "@/components/EmptyState";
+import { formatDate } from "@/lib/utils";
 import { useAddWeighIn, useWeighIns } from "@/hooks/useWeighIns";
+
+function TrendChart({ data }: { data: { logged_at: string; weight_kg: number; trend_weight_kg: number | null }[] }) {
+  if (data.length < 2) return null;
+  const points = [...data].reverse();
+  const values = points.flatMap((p) => [Number(p.weight_kg), Number(p.trend_weight_kg ?? p.weight_kg)]);
+  const min = Math.min(...values) - 0.5;
+  const max = Math.max(...values) + 0.5;
+  const W = 320;
+  const H = 120;
+  const x = (i: number) => (i / (points.length - 1)) * W;
+  const y = (v: number) => H - ((v - min) / (max - min)) * H;
+  const trendPath = points
+    .map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(Number(p.trend_weight_kg ?? p.weight_kg)).toFixed(1)}`)
+    .join(" ");
+
+  return (
+    <svg viewBox={`-4 -6 ${W + 8} ${H + 12}`} className="w-full">
+      {points.map((p, i) => (
+        <circle key={i} cx={x(i)} cy={y(Number(p.weight_kg))} r="2.5" className="fill-muted-foreground/40" />
+      ))}
+      <path d={trendPath} fill="none" strokeWidth="2.5" strokeLinecap="round" className="stroke-foreground" />
+    </svg>
+  );
+}
 
 export default function WeightPage() {
   const [weight, setWeight] = useState("");
   const weighIns = useWeighIns();
   const add = useAddWeighIn();
 
+  const latest = weighIns.data?.[0];
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Weight</h1>
+    <div className="space-y-5">
+      <h1 className="pt-1 text-xl font-extrabold tracking-tight">Progress</h1>
+
+      <Card className="space-y-4 p-6">
+        <div>
+          <p className="text-5xl font-extrabold tabular-nums">
+            {latest ? Number(latest.trend_weight_kg ?? latest.weight_kg).toFixed(1) : "—"}
+            <span className="ml-1 text-lg font-semibold text-muted-foreground">kg</span>
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Trend weight{latest ? ` · raw ${Number(latest.weight_kg).toFixed(1)} kg` : ""}
+          </p>
+        </div>
+        <TrendChart data={weighIns.data ?? []} />
+      </Card>
 
       <form
         className="flex gap-2"
@@ -19,47 +63,37 @@ export default function WeightPage() {
           if (weight) add.mutate(Number(weight), { onSuccess: () => setWeight("") });
         }}
       >
-        <input
-          className="flex-1 rounded border px-3 py-2 dark:bg-neutral-900 dark:border-neutral-700"
+        <Input
+          className="h-12 rounded-full bg-card px-5 shadow-sm"
           type="number"
           step="0.1"
           placeholder="Weight (kg)"
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
         />
-        <button
-          className="rounded bg-green-700 px-4 py-2 text-white disabled:opacity-50"
-          disabled={add.isPending || !weight}
-        >
+        <Button className="h-12 rounded-full px-6" disabled={add.isPending || !weight}>
           Log
-        </button>
+        </Button>
       </form>
-      {add.isError && <p className="text-sm text-red-600">{String(add.error)}</p>}
+      {add.isError && <p className="text-sm text-destructive">{String(add.error)}</p>}
 
-      {/* TODO: replace the table with a raw-vs-trend chart */}
-      <table className="w-full text-sm tabular-nums">
-        <thead>
-          <tr className="border-b text-left text-neutral-500 dark:border-neutral-700">
-            <th className="py-1 font-medium">Date</th>
-            <th className="py-1 text-right font-medium">Raw</th>
-            <th className="py-1 text-right font-medium">Trend</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(weighIns.data ?? []).map((w) => (
-            <tr key={w.id} className="border-b last:border-0 dark:border-neutral-800">
-              <td className="py-1">{new Date(w.logged_at).toLocaleDateString()}</td>
-              <td className="py-1 text-right">{Number(w.weight_kg).toFixed(1)}</td>
-              <td className="py-1 text-right">
-                {w.trend_weight_kg ? Number(w.trend_weight_kg).toFixed(1) : "—"}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {weighIns.data?.length === 0 && (
-        <p className="text-sm text-neutral-500">No weigh-ins yet.</p>
-      )}
+      <section className="space-y-3">
+        <h2 className="text-lg font-extrabold">History</h2>
+        {(weighIns.data ?? []).slice(0, 14).map((w) => (
+          <Card key={w.id} className="flex items-center justify-between p-4">
+            <span className="text-sm text-muted-foreground">{formatDate(w.logged_at)}</span>
+            <span className="text-sm tabular-nums">
+              <span className="font-semibold">{Number(w.weight_kg).toFixed(1)}</span>
+              <span className="ml-2 text-muted-foreground">
+                trend {w.trend_weight_kg ? Number(w.trend_weight_kg).toFixed(1) : "—"}
+              </span>
+            </span>
+          </Card>
+        ))}
+        {weighIns.data?.length === 0 && (
+          <EmptyState>No weigh-ins yet. Log the first one above.</EmptyState>
+        )}
+      </section>
     </div>
   );
 }

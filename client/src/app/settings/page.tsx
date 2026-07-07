@@ -2,8 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/components/Providers";
+
+// Local-timezone yyyy-mm-dd; toISOString() would shift the day across UTC.
+function toISODate(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 export default function SettingsPage() {
   const session = useSession();
@@ -30,6 +49,7 @@ export default function SettingsPage() {
     goal: "maintain",
     activity_multiplier: "1.375",
   });
+  const [dateOpen, setDateOpen] = useState(false);
 
   useEffect(() => {
     if (profile.data) {
@@ -62,82 +82,114 @@ export default function SettingsPage() {
     },
   });
 
-  const input = "w-full rounded border px-3 py-2 dark:bg-neutral-900 dark:border-neutral-700";
-  const label = "block text-sm font-medium mb-1";
-
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Settings</h1>
-      <p className="text-sm text-neutral-500">
-        These feed the BMR and energy-balance calculations.
-      </p>
+    <div className="space-y-5">
+      <div className="pt-1">
+        <h1 className="text-xl font-extrabold tracking-tight">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          These calibrate your calorie target and energy balance.
+        </p>
+      </div>
 
-      <div>
-        <label className={label}>Height (cm)</label>
-        <input
-          className={input}
-          type="number"
-          value={form.height_cm}
-          onChange={(e) => setForm({ ...form, height_cm: e.target.value })}
-        />
-      </div>
-      <div>
-        <label className={label}>Birth date</label>
-        <input
-          className={input}
-          type="date"
-          value={form.birth_date}
-          onChange={(e) => setForm({ ...form, birth_date: e.target.value })}
-        />
-      </div>
-      <div>
-        <label className={label}>Biological sex (for the BMR formula)</label>
-        <select
-          className={input}
-          value={form.biological_sex}
-          onChange={(e) => setForm({ ...form, biological_sex: e.target.value })}
-        >
-          <option value="male">male</option>
-          <option value="female">female</option>
-        </select>
-      </div>
-      <div>
-        <label className={label}>Goal</label>
-        <select
-          className={input}
-          value={form.goal}
-          onChange={(e) => setForm({ ...form, goal: e.target.value })}
-        >
-          <option value="cut">cut</option>
-          <option value="maintain">maintain</option>
-          <option value="bulk">bulk</option>
-        </select>
-      </div>
-      <div>
-        <label className={label}>Activity multiplier (fallback when no wearable data)</label>
-        <select
-          className={input}
-          value={form.activity_multiplier}
-          onChange={(e) => setForm({ ...form, activity_multiplier: e.target.value })}
-        >
-          <option value="1.2">1.2 - sedentary</option>
-          <option value="1.375">1.375 - lightly active</option>
-          <option value="1.55">1.55 - moderately active</option>
-        </select>
-      </div>
+      <Card className="space-y-4 p-5">
+        <div className="space-y-1.5">
+          <Label htmlFor="height">Height (cm)</Label>
+          <Input
+            id="height"
+            className="h-11 rounded-xl"
+            type="number"
+            value={form.height_cm}
+            onChange={(e) => setForm({ ...form, height_cm: e.target.value })}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Birth date</Label>
+          <Popover open={dateOpen} onOpenChange={setDateOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-11 w-full justify-between rounded-xl font-normal"
+              >
+                {form.birth_date
+                  ? new Date(form.birth_date).toLocaleDateString([], {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : "Select date"}
+                <ChevronDown className="size-4 text-muted-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                captionLayout="dropdown"
+                selected={form.birth_date ? new Date(form.birth_date) : undefined}
+                defaultMonth={form.birth_date ? new Date(form.birth_date) : new Date(1995, 0)}
+                onSelect={(d) => {
+                  setForm({ ...form, birth_date: d ? toISODate(d) : "" });
+                  setDateOpen(false);
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Biological sex (for the BMR formula)</Label>
+          <Select
+            value={form.biological_sex}
+            onValueChange={(v) => setForm({ ...form, biological_sex: v })}
+          >
+            <SelectTrigger className="h-11 w-full rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Goal</Label>
+          <Select value={form.goal} onValueChange={(v) => setForm({ ...form, goal: v })}>
+            <SelectTrigger className="h-11 w-full rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="cut">Lose weight</SelectItem>
+              <SelectItem value="maintain">Maintain</SelectItem>
+              <SelectItem value="bulk">Gain weight</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Activity level (fallback without wearable data)</Label>
+          <Select
+            value={form.activity_multiplier}
+            onValueChange={(v) => setForm({ ...form, activity_multiplier: v })}
+          >
+            <SelectTrigger className="h-11 w-full rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1.2">Sedentary</SelectItem>
+              <SelectItem value="1.375">Lightly active</SelectItem>
+              <SelectItem value="1.55">Moderately active</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
+
+      <Button className="h-12 w-full rounded-full" disabled={save.isPending} onClick={() => save.mutate()}>
+        {save.isPending ? "Saving…" : "Save profile"}
+      </Button>
+      {save.isSuccess && <p className="text-center text-sm font-medium">Saved ✓</p>}
+      {save.isError && <p className="text-sm text-destructive">{String(save.error)}</p>}
 
       <button
-        className="rounded bg-green-700 px-4 py-2 text-white disabled:opacity-50"
-        disabled={save.isPending}
-        onClick={() => save.mutate()}
+        className="w-full text-center text-sm text-muted-foreground underline"
+        onClick={() => supabase.auth.signOut()}
       >
-        {save.isPending ? "Saving…" : "Save profile"}
-      </button>
-      {save.isSuccess && <p className="text-sm text-green-700 dark:text-green-400">Saved</p>}
-      {save.isError && <p className="text-sm text-red-600">{String(save.error)}</p>}
-
-      <hr className="dark:border-neutral-700" />
-      <button className="text-sm text-neutral-500 underline" onClick={() => supabase.auth.signOut()}>
         Sign out
       </button>
     </div>

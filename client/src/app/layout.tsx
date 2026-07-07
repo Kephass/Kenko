@@ -1,16 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
-import Nav from "@/components/Nav";
+import BottomNav from "@/components/BottomNav";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
@@ -21,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: "#f5f5f6",
 };
 
 export default function RootLayout({
@@ -32,12 +27,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <Providers>
-          <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-6 pb-24">{children}</main>
-          <Nav />
+          <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-28">{children}</main>
+          <BottomNav />
         </Providers>
       </body>
     </html>
