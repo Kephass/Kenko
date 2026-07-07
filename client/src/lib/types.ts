@@ -546,7 +546,10 @@ export type Database = {
           similarity: number
         }[]
       }
-      recompute_weight_trend: { Args: { p_user_id: string }; Returns: undefined }
+      recompute_weight_trend: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
       weekly_energy_balance: {
         Args: { p_as_of?: string; p_user_id: string }
         Returns: {
