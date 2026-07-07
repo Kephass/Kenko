@@ -1,0 +1,22 @@
+# secrets
+.env
+.env.local
+.env.*.local
+
+# node
+node_modules/
+.next/
+out/
+
+# python
+scripts/.venv/
+__pycache__/
+*.pyc
+
+# supabase local dev
+supabase/.temp/
+supabase/.branches/
+
+# misc
+.DS_Store
+*.log

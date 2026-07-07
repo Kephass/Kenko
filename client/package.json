@@ -1,0 +1,34 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "supabase:link": "cd .. && supabase link",
+    "db:push": "cd .. && supabase db push",
+    "functions:serve": "cd .. && supabase functions serve log-meal --env-file .env",
+    "functions:deploy": "cd .. && supabase functions deploy log-meal",
+    "types:gen": "cd .. && supabase gen types typescript --linked > client/src/lib/types.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.110.0",
+    "@tanstack/react-query": "^5.101.2",
+    "next": "16.2.10",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.10",
+    "next-pwa": "^5.6.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
