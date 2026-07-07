@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { onlineManager } from "@tanstack/react-query";
 import { Camera, Flame } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,7 @@ export default function LogPage() {
   function submitManual() {
     const input = dish
       ? {
+          id: crypto.randomUUID(),
           dish_id: dish.id,
           portion_ratio: dish.reference_serving_g ? dishGrams / Number(dish.reference_serving_g) : undefined,
           calories: Number(dish.calories_per_100g) * scale,
@@ -92,6 +94,7 @@ export default function LogPage() {
           fat_g: Number(dish.fat_g_per_100g ?? 0) * scale,
         }
       : {
+          id: crypto.randomUUID(),
           calories: Number(manualCalories),
           protein_g: Number(manualMacros.protein) || 0,
           carbs_g: Number(manualMacros.carbs) || 0,
@@ -99,6 +102,9 @@ export default function LogPage() {
           raw_text_input: manualNote || undefined,
         };
     addManual.mutate(input, { onSuccess: () => router.push("/") });
+    // Offline the mutation pauses (no onSuccess); the optimistic insert already
+    // put it on the dashboard, so head there instead of hanging on "Logging…".
+    if (!onlineManager.isOnline()) router.push("/");
   }
 
   if (draft && !confirm.isSuccess) {

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { TablesUpdate } from "@/lib/types";
 import { useSession } from "@/components/Providers";
+import { ADD_MANUAL_MEAL_KEY, type ManualMealInput } from "@/lib/mealLogMutations";
 import { dayRange } from "@/lib/utils";
 
 export function useMealLogsForDay(day: string) {
@@ -67,36 +68,15 @@ export function useLogMeal() {
   });
 }
 
-export type ManualMealInput = {
-  dish_id?: string;
-  portion_ratio?: number;
-  calories: number;
-  protein_g?: number;
-  carbs_g?: number;
-  fat_g?: number;
-  raw_text_input?: string;
-};
+export type { ManualMealInput } from "@/lib/mealLogMutations";
 
-/** Direct insert, already confirmed - manual entries skip the draft round-trip. */
+/**
+ * Direct insert, already confirmed - manual entries skip the draft round-trip.
+ * mutationFn + optimistic update live in module-scope defaults
+ * (lib/mealLogMutations) so paused offline mutations resume after a reload.
+ */
 export function useAddManualMealLog() {
-  const session = useSession();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: ManualMealInput) => {
-      const { error } = await supabase.from("meal_logs").insert({
-        ...input,
-        user_id: session!.user.id,
-        source: "manual",
-        confirmed: true,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["meal_logs"] });
-      qc.invalidateQueries({ queryKey: ["daily_summary"] });
-      qc.invalidateQueries({ queryKey: ["weekly_balance"] });
-    },
-  });
+  return useMutation<void, Error, ManualMealInput>({ mutationKey: ADD_MANUAL_MEAL_KEY });
 }
 
 export function useUpdateMealLog() {

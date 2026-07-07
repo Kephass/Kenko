@@ -26,10 +26,10 @@ The app's core loop, with zero AI. Everything else depends on this.
 
 ## Phase 3 — PWA install + offline
 
-- [ ] Serwist via `@serwist/turbopack` (`src/app/sw.ts` + route handler); exclude Supabase URLs from SW cache
-- [ ] Typed `src/app/manifest.ts`; fix theme_color mismatch; real icons (maskable + apple-touch)
-- [ ] TanStack offline persistence (IndexedDB): per-user cache buster, module-scope mutation defaults for offline queue, never persist the AI mutation
-- [ ] Offline indicator; manual logging works offline
+- [x] Serwist via `@serwist/turbopack` (`src/app/sw.ts` + route handler); exclude Supabase URLs from SW cache
+- [x] Typed `src/app/manifest.ts`; fix theme_color mismatch; real icons (maskable + apple-touch)
+- [x] TanStack offline persistence (IndexedDB): per-user cache buster, module-scope mutation defaults for offline queue, never persist the AI mutation
+- [x] Offline indicator; manual logging works offline
 
 ## Phase 4 — Goals & onboarding
 
