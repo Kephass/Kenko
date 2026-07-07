@@ -254,12 +254,12 @@ export default function LogPage() {
               <SelectTrigger className="h-12 w-full rounded-full border-0 bg-muted/60 px-4 shadow-none">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="rounded-3xl p-1.5">
-                <SelectItem className="rounded-full px-3 py-2.5" value="none">
+              <SelectContent className="rounded-xl p-1">
+                <SelectItem className="rounded-lg px-3 py-2" value="none">
                   No dish — enter macros below
                 </SelectItem>
                 {(dishes.data ?? []).map((d) => (
-                  <SelectItem className="rounded-full px-3 py-2.5" key={d.id} value={d.id}>
+                  <SelectItem className="rounded-lg px-3 py-2" key={d.id} value={d.id}>
                     {d.name}
                   </SelectItem>
                 ))}
