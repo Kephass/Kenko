@@ -1,12 +1,8 @@
 import type { NextConfig } from "next";
 
-// No service worker yet: the manifest + icons in public/ already make the
-// app installable. When offline support becomes a real need, use
-// @serwist/turbopack (next-pwa is webpack-only and can't run under
-// Turbopack builds).
+// No service worker yet; use @serwist/turbopack when offline support is needed.
 const nextConfig: NextConfig = {
-  // Pin the workspace root: a stray lockfile elsewhere (e.g. ~/pnpm-lock.yaml)
-  // otherwise makes Next.js infer the wrong root.
+  // Pinned so stray lockfiles outside the repo aren't inferred as the workspace root.
   turbopack: {
     root: __dirname,
   },
