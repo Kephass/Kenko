@@ -1,13 +1,19 @@
 "use client";
 
-import { localDateISO } from "@/lib/utils";
+import ProgressRing from "@/components/ProgressRing";
+import { addDays, localDateISO } from "@/lib/utils";
 
 const LETTERS = ["S", "M", "T", "W", "T", "F", "S"];
-const R = 14.5;
-const C = 2 * Math.PI * R;
+const PAST_DAYS = 5;
 
-/** Cal AI-style week strip: 5 past days, today, tomorrow (faded). Past days and
- *  today are tappable; each ring shows that day's calories vs. the daily target. */
+/** The window the strip renders: 5 past days, today, tomorrow. Consumers fetching
+ *  data for the rings should derive their date range from this same list. */
+export function weekStripDays(now = new Date()) {
+  return Array.from({ length: PAST_DAYS + 2 }, (_, i) => addDays(now, i - PAST_DAYS));
+}
+
+/** Cal AI-style week strip. Past days and today are tappable; each ring shows
+ *  that day's calories vs. the daily target. */
 export default function WeekStrip({
   selected,
   onSelect,
@@ -17,20 +23,14 @@ export default function WeekStrip({
   onSelect: (day: string) => void;
   ratios: Record<string, number>;
 }) {
-  const now = new Date();
-  const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(now);
-    d.setDate(d.getDate() - (5 - i));
-    return d;
-  });
+  const days = weekStripDays();
 
   return (
     <div className="flex justify-between px-1">
       {days.map((d, i) => {
         const day = localDateISO(d);
-        const future = i === 6;
+        const future = i === days.length - 1;
         const isSelected = day === selected;
-        const ratio = Math.min(1, ratios[day] ?? 0);
         return (
           <button
             key={day}
@@ -44,32 +44,21 @@ export default function WeekStrip({
                 {LETTERS[d.getDay()]}
               </span>
             ) : (
-              <span
-                className={`relative flex size-8 items-center justify-center text-xs ${
-                  isSelected ? "font-semibold" : "text-muted-foreground"
-                }`}
+              <ProgressRing
+                value={ratios[day] ?? 0}
+                size={32}
+                stroke={2}
+                className={isSelected ? "text-foreground" : "text-foreground/45"}
               >
-                <svg viewBox="0 0 32 32" className="absolute inset-0 -rotate-90">
-                  <circle cx="16" cy="16" r={R} fill="none" strokeWidth="2" className="stroke-foreground/15" />
-                  {ratio > 0 && (
-                    <circle
-                      cx="16"
-                      cy="16"
-                      r={R}
-                      fill="none"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeDasharray={C}
-                      strokeDashoffset={C * (1 - ratio)}
-                      className={isSelected ? "stroke-foreground" : "stroke-foreground/45"}
-                    />
-                  )}
-                </svg>
                 {isSelected && <span className="absolute inset-1 rounded-full bg-foreground" />}
-                <span className={`relative ${isSelected ? "text-background" : ""}`}>
+                <span
+                  className={`relative text-xs ${
+                    isSelected ? "font-semibold text-background" : "text-muted-foreground"
+                  }`}
+                >
                   {LETTERS[d.getDay()]}
                 </span>
-              </span>
+              </ProgressRing>
             )}
             <span
               className={`text-xs tabular-nums ${

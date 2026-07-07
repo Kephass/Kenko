@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ProgressRing from "@/components/ProgressRing";
 import MacroInputs from "@/components/MacroInputs";
-import WeekStrip from "@/components/WeekStrip";
+import WeekStrip, { weekStripDays } from "@/components/WeekStrip";
 import EmptyState from "@/components/EmptyState";
 import { MACROS } from "@/lib/macros";
 import { deriveDailyGoals } from "@/lib/goals";
@@ -161,11 +161,8 @@ export default function Dashboard() {
   const latestMeasurement = useLatestMeasurement();
   const streak = useLogStreak();
 
-  const weekStart = (() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 5);
-    return localDateISO(d);
-  })();
+  // Fetch range derives from the strip's own window so the two can't drift.
+  const weekStart = localDateISO(weekStripDays()[0]);
   const week = useDailySummary(weekStart, today);
 
   const confirmed = (meals.data ?? []).filter((m) => m.confirmed);

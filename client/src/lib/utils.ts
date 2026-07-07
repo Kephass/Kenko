@@ -5,6 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function addDays(d: Date, n: number) {
+  const copy = new Date(d);
+  copy.setDate(copy.getDate() + n);
+  return copy;
+}
+
 /** yyyy-mm-dd in the user's local timezone. */
 export function localDateISO(d: Date = new Date()) {
   const y = d.getFullYear();

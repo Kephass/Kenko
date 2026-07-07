@@ -9,17 +9,11 @@ import TrendChart from "@/components/TrendChart";
 import EmptyState from "@/components/EmptyState";
 import { MACROS } from "@/lib/macros";
 import { deriveDailyGoals } from "@/lib/goals";
-import { formatDate, localDateISO } from "@/lib/utils";
+import { addDays, formatDate, localDateISO } from "@/lib/utils";
 import { useDailySummary, summaryByDay } from "@/hooks/useDailySummary";
 import { useWeeklyBalance } from "@/hooks/useWeeklyBalance";
 import { useWeighIns } from "@/hooks/useWeighIns";
 import { useMeasurements } from "@/hooks/useMeasurements";
-
-function addDays(d: Date, n: number) {
-  const copy = new Date(d);
-  copy.setDate(copy.getDate() + n);
-  return copy;
-}
 
 const W = 320;
 const H = 110;
@@ -84,24 +78,29 @@ export default function HistoryPage() {
 
   const monthStart = localDateISO(new Date(month.getFullYear(), month.getMonth(), 1));
   const monthEnd = localDateISO(new Date(month.getFullYear(), month.getMonth() + 1, 0));
-  const monthSummary = useDailySummary(monthStart, monthEnd);
-
   const chartStart = localDateISO(addDays(today, -29));
-  const last30 = useDailySummary(chartStart, todayIso);
+
+  // One RPC covering both the visible month and the 30-day charts; the ranges
+  // mostly overlap when viewing the current month.
+  const summary = useDailySummary(
+    chartStart < monthStart ? chartStart : monthStart,
+    monthEnd > todayIso ? monthEnd : todayIso,
+  );
 
   const balance = useWeeklyBalance();
   const weighIns = useWeighIns();
   const measurements = useMeasurements();
 
   const goals = deriveDailyGoals(balance.data?.calories_out);
-  const byDay = summaryByDay(monthSummary.data);
+  const byDay = summaryByDay(summary.data);
   const selectedIso = selected ? localDateISO(selected) : undefined;
   const daySummary = selectedIso ? byDay[selectedIso] : undefined;
-  const loggedDates = (monthSummary.data ?? []).map((r) => new Date(`${r.day}T00:00:00`));
+  const loggedDates = (summary.data ?? [])
+    .filter((r) => r.day >= monthStart && r.day <= monthEnd)
+    .map((r) => new Date(`${r.day}T00:00:00`));
 
-  const by30 = summaryByDay(last30.data);
   const series = Array.from({ length: 30 }, (_, i) => {
-    const row = by30[localDateISO(addDays(today, i - 29))];
+    const row = byDay[localDateISO(addDays(today, i - 29))];
     return {
       calories: Number(row?.calories ?? 0),
       protein: Number(row?.protein_g ?? 0),
