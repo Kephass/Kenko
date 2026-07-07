@@ -21,6 +21,33 @@ export function useTodayMealLogs() {
   });
 }
 
+/** Consecutive days with a confirmed log; today counts if logged, else counted from yesterday. */
+export function useLogStreak() {
+  return useQuery({
+    queryKey: ["meal_logs", "streak"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const since = new Date();
+      since.setDate(since.getDate() - 365);
+      const { data, error } = await supabase
+        .from("meal_logs")
+        .select("logged_at")
+        .eq("confirmed", true)
+        .gte("logged_at", since.toISOString());
+      if (error) throw error;
+      const days = new Set(data.map((r) => new Date(r.logged_at).toDateString()));
+      let streak = 0;
+      const cur = new Date();
+      if (!days.has(cur.toDateString())) cur.setDate(cur.getDate() - 1);
+      while (days.has(cur.toDateString())) {
+        streak++;
+        cur.setDate(cur.getDate() - 1);
+      }
+      return streak;
+    },
+  });
+}
+
 /** POST to the log-meal edge function; returns the draft meal_logs row. */
 export function useLogMeal() {
   const session = useSession();

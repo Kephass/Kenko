@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ProgressRing from "@/components/ProgressRing";
+import BackButton from "@/components/BackButton";
 import { useAddWater, useTodayWater, waterTotal } from "@/hooks/useWaterLogs";
 import { formatTime } from "@/lib/utils";
 
@@ -21,9 +22,12 @@ export default function WaterPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="pt-1 text-xl font-extrabold tracking-tight">Water</h1>
+      <div className="relative flex items-center justify-center pt-1">
+        <div className="absolute left-0"><BackButton /></div>
+        <h1 className="text-xl font-extrabold tracking-tight">Water</h1>
+      </div>
 
-      <Card className="flex items-center justify-between p-6">
+      <Card className="flex-row items-center justify-between p-6">
         <div>
           <p className="text-5xl font-extrabold tabular-nums">
             {total}
@@ -32,7 +36,7 @@ export default function WaterPage() {
           <p className="mt-1 text-sm text-muted-foreground">of {DAILY_GOAL_ML} ml today</p>
         </div>
         <ProgressRing value={total / DAILY_GOAL_ML} size={96} stroke={9} className="text-water">
-          <span className="flex size-12 items-center justify-center rounded-full bg-muted text-water">
+          <span className="flex size-12 items-center justify-center rounded-full bg-current/10 text-water">
             <GlassWater className="size-5" />
           </span>
         </ProgressRing>
@@ -43,7 +47,7 @@ export default function WaterPage() {
           <Button
             key={ml}
             variant="secondary"
-            className="h-12 flex-1 rounded-full bg-card shadow-sm"
+            className="h-12 flex-1 rounded-full bg-card shadow-soft"
             disabled={add.isPending}
             onClick={() => add.mutate(ml)}
           >
@@ -60,7 +64,7 @@ export default function WaterPage() {
         }}
       >
         <Input
-          className="h-12 rounded-full bg-card px-5 shadow-sm"
+          className="h-12 rounded-full bg-card px-5 shadow-soft"
           type="number"
           placeholder="Custom amount (ml)"
           value={custom}
@@ -74,9 +78,9 @@ export default function WaterPage() {
 
       <section className="space-y-3">
         {(water.data ?? []).map((w) => (
-          <Card key={w.id} className="flex items-center justify-between p-4">
+          <Card key={w.id} className="flex-row items-center justify-between p-4">
             <div className="flex items-center gap-3">
-              <span className="flex size-9 items-center justify-center rounded-full bg-muted text-water">
+              <span className="flex size-9 items-center justify-center rounded-full bg-current/10 text-water">
                 <GlassWater className="size-4" />
               </span>
               <span className="text-sm font-semibold tabular-nums">{Number(w.amount_ml)} ml</span>

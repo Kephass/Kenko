@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MACROS } from "@/lib/macros";
 import { useConfirmMealLog, useDiscardMealLog, useLogMeal } from "@/hooks/useMealLogs";
+import BackButton from "@/components/BackButton";
 
 // Camera/text -> POST log-meal -> confirm screen; confirming is an UPDATE on
 // the draft row, and failed captures stay in state for an explicit retry.
@@ -44,7 +45,10 @@ export default function LogPage() {
   if (draft && !confirm.isSuccess) {
     return (
       <div className="space-y-5">
-        <h1 className="pt-1 text-xl font-extrabold tracking-tight">Confirm this meal?</h1>
+        <div className="relative flex items-center justify-center pt-1">
+          <div className="absolute left-0"><BackButton /></div>
+          <h1 className="text-xl font-extrabold tracking-tight">Confirm this meal?</h1>
+        </div>
 
         <Card className="space-y-4 p-6">
           <div className="flex items-center gap-3">
@@ -84,7 +88,7 @@ export default function LogPage() {
           </Button>
           <Button
             variant="secondary"
-            className="h-12 flex-1 rounded-full bg-card shadow-sm"
+            className="h-12 flex-1 rounded-full bg-card shadow-soft"
             disabled={discard.isPending}
             onClick={() => discard.mutate(draft.id, { onSuccess: reset })}
           >
@@ -97,7 +101,10 @@ export default function LogPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="pt-1 text-xl font-extrabold tracking-tight">Log a meal</h1>
+      <div className="relative flex items-center justify-center pt-1">
+        <div className="absolute left-0"><BackButton /></div>
+        <h1 className="text-xl font-extrabold tracking-tight">Log a meal</h1>
+      </div>
 
       <label className="block cursor-pointer">
         <Card className="flex flex-col items-center gap-3 p-10 text-center">
@@ -121,7 +128,7 @@ export default function LogPage() {
       </label>
 
       <textarea
-        className="w-full rounded-3xl border-0 bg-card p-4 text-sm shadow-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
+        className="w-full rounded-3xl border-0 bg-card p-4 text-sm shadow-soft outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring"
         rows={2}
         placeholder="Describe what you ate (optional)"
         value={text}

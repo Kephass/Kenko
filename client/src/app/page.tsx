@@ -10,7 +10,7 @@ import { MACROS } from "@/lib/macros";
 import { deriveDailyGoals } from "@/lib/goals";
 import { formatTime } from "@/lib/utils";
 import { useWeeklyBalance } from "@/hooks/useWeeklyBalance";
-import { useTodayMealLogs } from "@/hooks/useMealLogs";
+import { useLogStreak, useTodayMealLogs } from "@/hooks/useMealLogs";
 import { useTodayWater, waterTotal } from "@/hooks/useWaterLogs";
 import { useLatestMeasurement } from "@/hooks/useMeasurements";
 
@@ -34,7 +34,7 @@ function MacroCard({
         <p className="text-xs text-muted-foreground">{label} left</p>
       </div>
       <ProgressRing value={ratio} size={56} stroke={6} className={colorClass}>
-        <span className={`flex size-7 items-center justify-center rounded-full bg-muted ${colorClass}`}>
+        <span className={`flex size-7 items-center justify-center rounded-full bg-current/10 ${colorClass}`}>
           <Icon className="size-3.5" />
         </span>
       </ProgressRing>
@@ -47,6 +47,7 @@ export default function Dashboard() {
   const meals = useTodayMealLogs();
   const water = useTodayWater();
   const latestMeasurement = useLatestMeasurement();
+  const streak = useLogStreak();
 
   const confirmed = (meals.data ?? []).filter((m) => m.confirmed);
   const eaten = confirmed.reduce(
@@ -70,11 +71,17 @@ export default function Dashboard() {
         <h1 className="text-xl font-extrabold tracking-tight">
           Kenko <span className="align-middle text-xs font-medium text-muted-foreground">健康</span>
         </h1>
+        {streak.data !== undefined && (
+          <span className="flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-sm font-semibold tabular-nums shadow-soft ring-1 ring-black/[0.04]">
+            <Flame className="size-4 fill-carbs text-carbs" />
+            {streak.data}
+          </span>
+        )}
       </header>
 
       <WeekStrip />
 
-      <Card className="flex items-center justify-between p-6">
+      <Card className="flex-row items-center justify-between p-6">
         <div>
           <p className="text-5xl font-extrabold tabular-nums">
             {balance.isLoading ? "…" : Math.abs(caloriesLeft)}
@@ -105,8 +112,8 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-2 gap-3">
         <Link href="/water">
-          <Card className="flex items-center gap-3 p-4">
-            <span className="flex size-9 items-center justify-center rounded-full bg-muted text-water">
+          <Card className="flex-row items-center gap-3 p-4">
+            <span className="flex size-9 items-center justify-center rounded-full bg-current/10 text-water">
               <GlassWater className="size-4.5" />
             </span>
             <div>
@@ -116,7 +123,7 @@ export default function Dashboard() {
           </Card>
         </Link>
         <Link href="/measurements">
-          <Card className="flex items-center gap-3 p-4">
+          <Card className="flex-row items-center gap-3 p-4">
             <span className="flex size-9 items-center justify-center rounded-full bg-muted">
               <Ruler className="size-4.5" />
             </span>
@@ -138,7 +145,7 @@ export default function Dashboard() {
           <EmptyState>Nothing logged today. Tap + to log your first meal.</EmptyState>
         )}
         {confirmed.map((m) => (
-          <Card key={m.id} className="flex items-center justify-between p-4">
+          <Card key={m.id} className="flex-row items-center justify-between p-4">
             <div className="flex items-center gap-3">
               <span className="flex size-9 items-center justify-center rounded-full bg-muted">
                 <Flame className="size-4" />
