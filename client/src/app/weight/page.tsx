@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
-import { formatDate } from "@/lib/utils";
+import { errorMessage, formatDate } from "@/lib/utils";
 import { useAddWeighIn, useWeighIns } from "@/hooks/useWeighIns";
 
 function TrendChart({ data }: { data: { logged_at: string; weight_kg: number; trend_weight_kg: number | null }[] }) {
@@ -83,7 +83,7 @@ export default function WeightPage() {
           Log
         </Button>
       </form>
-      {add.isError && <p className="text-sm text-destructive">{String(add.error)}</p>}
+      {add.isError && <p className="text-sm text-destructive">{errorMessage(add.error)}</p>}
 
       <section className="space-y-3">
         <h2 className="text-lg font-extrabold">History</h2>

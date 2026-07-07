@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import EmptyState from "@/components/EmptyState";
 import { useAddDish, useDeleteDish, useDishes, useUpdateDish } from "@/hooks/useDishes";
+import { errorMessage } from "@/lib/utils";
 
 const EMPTY = {
   name: "",
@@ -165,7 +166,7 @@ export default function DishesPage() {
             </div>
             {(add.isError || update.isError || del.isError) && (
               <p className="text-sm text-destructive">
-                {String(add.error ?? update.error ?? del.error)}
+                {errorMessage(add.error ?? update.error ?? del.error)}
               </p>
             )}
           </form>

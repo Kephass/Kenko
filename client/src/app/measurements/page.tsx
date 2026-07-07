@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
 import BackButton from "@/components/BackButton";
-import { formatDate } from "@/lib/utils";
+import { errorMessage, formatDate } from "@/lib/utils";
 import {
   useAddMeasurement,
   useMeasurements,
@@ -71,7 +71,7 @@ export default function MeasurementsPage() {
           Log
         </Button>
       </form>
-      {add.isError && <p className="text-sm text-destructive">{String(add.error)}</p>}
+      {add.isError && <p className="text-sm text-destructive">{errorMessage(add.error)}</p>}
 
       <section className="space-y-3">
         {(measurements.data ?? []).map((m) => (

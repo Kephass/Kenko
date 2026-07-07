@@ -15,6 +15,7 @@ import {
 import { useDishes } from "@/hooks/useDishes";
 import BackButton from "@/components/BackButton";
 import MacroInputs from "@/components/MacroInputs";
+import { errorMessage } from "@/lib/utils";
 
 const MODES = [
   { key: "scan", label: "Scan" },
@@ -228,7 +229,7 @@ export default function LogPage() {
 
           {logMeal.isError && (
             <Card className="space-y-2 p-4 text-sm">
-              <p className="font-medium text-destructive">{(logMeal.error as Error).message}</p>
+              <p className="font-medium text-destructive">{errorMessage(logMeal.error)}</p>
               <p className="text-muted-foreground">Your photo and note are still here — retry when ready.</p>
               <Button variant="secondary" size="sm" className="rounded-full" onClick={submit}>
                 Retry
@@ -305,7 +306,7 @@ export default function LogPage() {
             {addManual.isPending ? "Logging…" : "Log meal"}
           </Button>
           {addManual.isError && (
-            <p className="text-sm text-destructive">{String(addManual.error)}</p>
+            <p className="text-sm text-destructive">{errorMessage(addManual.error)}</p>
           )}
         </>
       )}

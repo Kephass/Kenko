@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { errorMessage } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -184,7 +185,7 @@ export default function SettingsPage() {
         {save.isPending ? "Saving…" : "Save profile"}
       </Button>
       {save.isSuccess && <p className="text-center text-sm font-medium">Saved ✓</p>}
-      {save.isError && <p className="text-sm text-destructive">{String(save.error)}</p>}
+      {save.isError && <p className="text-sm text-destructive">{errorMessage(save.error)}</p>}
 
       <button
         className="w-full text-center text-sm text-muted-foreground underline"
