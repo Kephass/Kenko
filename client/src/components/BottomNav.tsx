@@ -18,7 +18,7 @@ export default function BottomNav() {
   if (!session) return null;
 
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-20 border-t bg-card/95 backdrop-blur">
+    <nav className="fixed bottom-0 inset-x-0 z-20 border-t border-black/[0.05] bg-card/90 shadow-[0_-8px_24px_oklch(0_0_0/0.05)] backdrop-blur">
       <div className="mx-auto flex max-w-md items-center justify-between px-6 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {links.map(({ href, label, Icon }) => (
           <Link
@@ -35,7 +35,7 @@ export default function BottomNav() {
         <Link
           href="/log"
           aria-label="Log a meal"
-          className="flex size-12 items-center justify-center rounded-full bg-foreground text-background shadow-lg"
+          className="flex size-12 items-center justify-center rounded-full bg-linear-to-b from-[oklch(0.34_0_0)] to-[oklch(0.14_0_0)] text-background shadow-[inset_0_1px_0_oklch(1_0_0/0.15),0_8px_20px_oklch(0_0_0/0.25)]"
         >
           <Plus className="size-6" strokeWidth={2.4} />
         </Link>

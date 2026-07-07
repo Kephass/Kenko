@@ -21,9 +21,17 @@ function TrendChart({ data }: { data: { logged_at: string; weight_kg: number; tr
   const trendPath = points
     .map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(Number(p.trend_weight_kg ?? p.weight_kg)).toFixed(1)}`)
     .join(" ");
+  const areaPath = `${trendPath} L${W},${H} L0,${H} Z`;
 
   return (
     <svg viewBox={`-4 -6 ${W + 8} ${H + 12}`} className="w-full">
+      <defs>
+        <linearGradient id="trend-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.14" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill="url(#trend-fill)" className="text-foreground" />
       {points.map((p, i) => (
         <circle key={i} cx={x(i)} cy={y(Number(p.weight_kg))} r="2.5" className="fill-muted-foreground/40" />
       ))}
@@ -64,7 +72,7 @@ export default function WeightPage() {
         }}
       >
         <Input
-          className="h-12 rounded-full bg-card px-5 shadow-sm"
+          className="h-12 rounded-full bg-card px-5 shadow-soft"
           type="number"
           step="0.1"
           placeholder="Weight (kg)"
@@ -80,7 +88,7 @@ export default function WeightPage() {
       <section className="space-y-3">
         <h2 className="text-lg font-extrabold">History</h2>
         {(weighIns.data ?? []).slice(0, 14).map((w) => (
-          <Card key={w.id} className="flex items-center justify-between p-4">
+          <Card key={w.id} className="flex-row items-center justify-between p-4">
             <span className="text-sm text-muted-foreground">{formatDate(w.logged_at)}</span>
             <span className="text-sm tabular-nums">
               <span className="font-semibold">{Number(w.weight_kg).toFixed(1)}</span>

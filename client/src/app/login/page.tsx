@@ -40,14 +40,14 @@ export default function LoginPage() {
       </div>
       <div className="space-y-3">
         <Input
-          className="h-12 rounded-xl bg-card shadow-sm"
+          className="h-12 rounded-xl bg-card shadow-soft"
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <Input
-          className="h-12 rounded-xl bg-card shadow-sm"
+          className="h-12 rounded-xl bg-card shadow-soft"
           type="password"
           placeholder="Password"
           value={password}
@@ -64,7 +64,7 @@ export default function LoginPage() {
         </Button>
         <Button
           variant="secondary"
-          className="h-12 w-full rounded-full bg-card shadow-sm"
+          className="h-12 w-full rounded-full bg-card shadow-soft"
           disabled={busy || !email || !password}
           onClick={() => submit("signUp")}
         >

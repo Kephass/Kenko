@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EmptyState from "@/components/EmptyState";
+import BackButton from "@/components/BackButton";
 import { formatDate } from "@/lib/utils";
 import {
   useAddMeasurement,
@@ -22,9 +23,12 @@ export default function MeasurementsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="pt-1">
-        <h1 className="text-xl font-extrabold tracking-tight">Measurements</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+      <div className="pt-1 text-center">
+        <div className="relative flex items-center justify-center">
+          <div className="absolute left-0"><BackButton /></div>
+          <h1 className="text-xl font-extrabold tracking-tight">Measurements</h1>
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">
           Waist, neck and hip also drive the body-fat estimate.
         </p>
       </div>
@@ -36,7 +40,7 @@ export default function MeasurementsPage() {
             type="button"
             onClick={() => setType(t)}
             className={`rounded-full px-4 py-2 text-sm font-medium capitalize transition-colors ${
-              type === t ? "bg-foreground text-background" : "bg-card text-muted-foreground shadow-sm"
+              type === t ? "bg-foreground text-background" : "bg-card text-muted-foreground shadow-soft"
             }`}
           >
             {t}
@@ -56,7 +60,7 @@ export default function MeasurementsPage() {
         }}
       >
         <Input
-          className="h-12 rounded-full bg-card px-5 shadow-sm"
+          className="h-12 rounded-full bg-card px-5 shadow-soft"
           type="number"
           step="0.1"
           placeholder={`${type} (cm)`}
@@ -71,7 +75,7 @@ export default function MeasurementsPage() {
 
       <section className="space-y-3">
         {(measurements.data ?? []).map((m) => (
-          <Card key={m.id} className="flex items-center justify-between p-4">
+          <Card key={m.id} className="flex-row items-center justify-between p-4">
             <div>
               <p className="text-sm font-semibold capitalize">{m.measurement_type}</p>
               <p className="text-xs text-muted-foreground">{formatDate(m.logged_at)}</p>

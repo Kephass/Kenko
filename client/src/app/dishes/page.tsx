@@ -131,7 +131,7 @@ export default function DishesPage() {
 
       <section className="space-y-3">
         {(dishes.data ?? []).map((d) => (
-          <Card key={d.id} className="flex items-center justify-between p-4">
+          <Card key={d.id} className="flex-row items-center justify-between p-4">
             <div className="flex items-center gap-3">
               <span className="flex size-9 items-center justify-center rounded-full bg-muted">
                 <Flame className="size-4" />
