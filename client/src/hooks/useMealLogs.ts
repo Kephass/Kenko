@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import type { TablesUpdate } from "@/lib/types";
 import { useSession } from "@/components/Providers";
 import { todayStart } from "@/lib/utils";
 
@@ -64,11 +65,71 @@ export function useLogMeal() {
   });
 }
 
+export type ManualMealInput = {
+  dish_id?: string;
+  portion_ratio?: number;
+  calories: number;
+  protein_g?: number;
+  carbs_g?: number;
+  fat_g?: number;
+  raw_text_input?: string;
+};
+
+/** Direct insert, already confirmed - manual entries skip the draft round-trip. */
+export function useAddManualMealLog() {
+  const session = useSession();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: ManualMealInput) => {
+      const { error } = await supabase.from("meal_logs").insert({
+        ...input,
+        user_id: session!.user.id,
+        source: "manual",
+        confirmed: true,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["meal_logs"] });
+      qc.invalidateQueries({ queryKey: ["weekly_balance"] });
+    },
+  });
+}
+
+export function useUpdateMealLog() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; edits: TablesUpdate<"meal_logs"> }) => {
+      const { error } = await supabase.from("meal_logs").update(input.edits).eq("id", input.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["meal_logs"] });
+      qc.invalidateQueries({ queryKey: ["weekly_balance"] });
+    },
+  });
+}
+
+/** Deletes any log, confirmed or draft. */
+export function useDeleteMealLog() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("meal_logs").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["meal_logs"] });
+      qc.invalidateQueries({ queryKey: ["weekly_balance"] });
+    },
+  });
+}
+
 /** Confirm (or adjust) a draft row - a plain UPDATE by id, not a re-submit. */
 export function useConfirmMealLog() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { id: string; edits?: Record<string, unknown> }) => {
+    mutationFn: async (input: { id: string; edits?: TablesUpdate<"meal_logs"> }) => {
       const { error } = await supabase
         .from("meal_logs")
         .update({ ...input.edits, confirmed: true })
