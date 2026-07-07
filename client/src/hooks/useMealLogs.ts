@@ -4,17 +4,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { TablesUpdate } from "@/lib/types";
 import { useSession } from "@/components/Providers";
-import { todayStart } from "@/lib/utils";
+import { dayRange } from "@/lib/utils";
 
-export function useTodayMealLogs() {
+export function useMealLogsForDay(day: string) {
   return useQuery({
-    queryKey: ["meal_logs", "today"],
+    queryKey: ["meal_logs", "day", day],
     staleTime: 60_000,
     queryFn: async () => {
+      const range = dayRange(day);
       const { data, error } = await supabase
         .from("meal_logs")
         .select("*")
-        .gte("logged_at", todayStart())
+        .gte("logged_at", range.start)
+        .lt("logged_at", range.end)
         .order("logged_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -91,6 +93,7 @@ export function useAddManualMealLog() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["meal_logs"] });
+      qc.invalidateQueries({ queryKey: ["daily_summary"] });
       qc.invalidateQueries({ queryKey: ["weekly_balance"] });
     },
   });
@@ -105,6 +108,7 @@ export function useUpdateMealLog() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["meal_logs"] });
+      qc.invalidateQueries({ queryKey: ["daily_summary"] });
       qc.invalidateQueries({ queryKey: ["weekly_balance"] });
     },
   });
@@ -120,6 +124,7 @@ export function useDeleteMealLog() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["meal_logs"] });
+      qc.invalidateQueries({ queryKey: ["daily_summary"] });
       qc.invalidateQueries({ queryKey: ["weekly_balance"] });
     },
   });
@@ -138,6 +143,7 @@ export function useConfirmMealLog() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["meal_logs"] });
+      qc.invalidateQueries({ queryKey: ["daily_summary"] });
       qc.invalidateQueries({ queryKey: ["weekly_balance"] });
     },
   });

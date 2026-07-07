@@ -8,19 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ProgressRing from "@/components/ProgressRing";
 import MacroInputs from "@/components/MacroInputs";
-import WeekStrip from "@/components/WeekStrip";
+import WeekStrip, { weekStripDays } from "@/components/WeekStrip";
 import EmptyState from "@/components/EmptyState";
 import { MACROS } from "@/lib/macros";
 import { deriveDailyGoals } from "@/lib/goals";
-import { formatTime } from "@/lib/utils";
+import { formatDate, formatTime, localDateISO } from "@/lib/utils";
 import { useWeeklyBalance } from "@/hooks/useWeeklyBalance";
 import {
   useDeleteMealLog,
   useLogStreak,
-  useTodayMealLogs,
+  useMealLogsForDay,
   useUpdateMealLog,
 } from "@/hooks/useMealLogs";
-import { useTodayWater, waterTotal } from "@/hooks/useWaterLogs";
+import { useDailySummary } from "@/hooks/useDailySummary";
+import { useWaterForDay, waterTotal } from "@/hooks/useWaterLogs";
 import { useLatestMeasurement } from "@/hooks/useMeasurements";
 
 function MacroCard({
@@ -150,11 +151,19 @@ function MealCard({
 }
 
 export default function Dashboard() {
+  const today = localDateISO();
+  const [selectedDay, setSelectedDay] = useState(today);
+  const isToday = selectedDay === today;
+
   const balance = useWeeklyBalance();
-  const meals = useTodayMealLogs();
-  const water = useTodayWater();
+  const meals = useMealLogsForDay(selectedDay);
+  const water = useWaterForDay(selectedDay);
   const latestMeasurement = useLatestMeasurement();
   const streak = useLogStreak();
+
+  // Fetch range derives from the strip's own window so the two can't drift.
+  const weekStart = localDateISO(weekStripDays()[0]);
+  const week = useDailySummary(weekStart, today);
 
   const confirmed = (meals.data ?? []).filter((m) => m.confirmed);
   const eaten = confirmed.reduce(
@@ -171,6 +180,9 @@ export default function Dashboard() {
   const caloriesLeft = Math.round(goals.calorieTarget - eaten.calories);
   const waterMl = waterTotal(water.data);
   const lastMeasurement = latestMeasurement.data;
+  const ratios = Object.fromEntries(
+    (week.data ?? []).map((r) => [r.day, Number(r.calories) / goals.calorieTarget]),
+  );
 
   return (
     <div className="space-y-5">
@@ -186,7 +198,7 @@ export default function Dashboard() {
         )}
       </header>
 
-      <WeekStrip />
+      <WeekStrip selected={selectedDay} onSelect={setSelectedDay} ratios={ratios} />
 
       <Card className="flex-row items-center justify-between p-6">
         <div>
@@ -225,7 +237,7 @@ export default function Dashboard() {
             </span>
             <div>
               <p className="font-extrabold tabular-nums">{waterMl} ml</p>
-              <p className="text-xs text-muted-foreground">Water today</p>
+              <p className="text-xs text-muted-foreground">{isToday ? "Water today" : "Water"}</p>
             </div>
           </Card>
         </Link>
@@ -247,9 +259,13 @@ export default function Dashboard() {
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-extrabold">Recently eaten</h2>
+        <h2 className="text-lg font-extrabold">
+          {isToday ? "Recently eaten" : `Eaten ${formatDate(`${selectedDay}T00:00:00`)}`}
+        </h2>
         {confirmed.length === 0 && (
-          <EmptyState>Nothing logged today. Tap + to log your first meal.</EmptyState>
+          <EmptyState>
+            {isToday ? "Nothing logged today. Tap + to log your first meal." : "Nothing logged this day."}
+          </EmptyState>
         )}
         {confirmed.map((m) => (
           <MealCard key={m.id} meal={m} />
