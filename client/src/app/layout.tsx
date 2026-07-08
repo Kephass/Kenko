@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import { SerwistProvider } from "@serwist/turbopack/react";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import BottomNav from "@/components/BottomNav";
@@ -10,9 +11,14 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
+  applicationName: "Kenko",
   title: "Kenko",
   description: "Personal nutrition and body tracking",
-  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Kenko",
+  },
 };
 
 export const viewport: Viewport = {
@@ -30,10 +36,13 @@ export default function RootLayout({
       className={`${geistSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Providers>
-          <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-28">{children}</main>
-          <BottomNav />
-        </Providers>
+        {/* reloadOnOnline off: TanStack resumes queued mutations on reconnect instead. */}
+        <SerwistProvider swUrl="/serwist/sw.js" reloadOnOnline={false}>
+          <Providers>
+            <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-28">{children}</main>
+            <BottomNav />
+          </Providers>
+        </SerwistProvider>
       </body>
     </html>
   );

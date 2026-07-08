@@ -1,6 +1,6 @@
+import { withSerwist } from "@serwist/turbopack";
 import type { NextConfig } from "next";
 
-// No service worker yet; use @serwist/turbopack when offline support is needed.
 const nextConfig: NextConfig = {
   // Pinned so stray lockfiles outside the repo aren't inferred as the workspace root.
   turbopack: {
@@ -8,4 +8,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Keeps esbuild external so the /serwist/[path] route can bundle the service worker.
+export default withSerwist(nextConfig);
