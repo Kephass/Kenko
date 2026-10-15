@@ -1,0 +1,1422 @@
+[
+ {
+  "id": "kenko-ao-cabidela",
+  "name": "Cabidela",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 170,
+   "protein": 15.0,
+   "carbs": 3.0,
+   "fat": 11.0,
+   "fiber": 0.5
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Chicken cooked in its own seasoned blood with vinegar and spices (moela/cabidela). Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-calulu",
+  "name": "Calulu",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 160,
+   "protein": 12.0,
+   "carbs": 6.0,
+   "fat": 10.0,
+   "fiber": 3.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Fresh and dried fish (or meat) with sweet potato leaves, okra and palm oil. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-cocada-amarela",
+  "name": "Cocada amarela",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 330,
+   "protein": 4.0,
+   "carbs": 48.0,
+   "fat": 14.0,
+   "fiber": 4.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 120
+   }
+  ],
+  "estimated": true,
+  "recipe": "Golden coconut pudding with egg yolk and sugar. Dessert of Portuguese heritage. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-doce-de-ginguba",
+  "name": "Doce de ginguba",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 470,
+   "protein": 16.0,
+   "carbs": 45.0,
+   "fat": 26.0,
+   "fiber": 5.0
+  },
+  "portions": [
+   {
+    "label": "1 piece",
+    "grams": 40
+   }
+  ],
+  "estimated": true,
+  "recipe": "Peanut sweet / brittle, caramelised roasted groundnuts. Dense treat. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-feijao-de-oleo-de-palma",
+  "name": "Feijão de óleo de palma",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 160,
+   "protein": 7.0,
+   "carbs": 18.0,
+   "fat": 7.0,
+   "fiber": 6.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Beans stewed in palm oil with onion and garlic. Everyday Angolan plate. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-funge-cassava",
+  "name": "Funge (cassava)",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 110,
+   "protein": 0.6,
+   "carbs": 27.0,
+   "fat": 0.2,
+   "fiber": 1.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Smooth cassava-flour swallow (funje). Base for Angolan stews and fish. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-funge-de-milho",
+  "name": "Funge de milho",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 115,
+   "protein": 2.0,
+   "carbs": 25.0,
+   "fat": 0.5,
+   "fiber": 1.2
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Maize-flour version of funge, served with muamba or calulu. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-kizaka-cassava-leaves",
+  "name": "Kizaka (cassava leaves)",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 150,
+   "protein": 6.0,
+   "carbs": 8.0,
+   "fat": 11.0,
+   "fiber": 4.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 150
+   }
+  ],
+  "estimated": true,
+  "recipe": "Pounded cassava leaves cooked with palm oil and groundnut paste (quizaca). Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-muamba-de-galinha",
+  "name": "Muamba de galinha",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 180,
+   "protein": 12.0,
+   "carbs": 4.0,
+   "fat": 13.0,
+   "fiber": 1.5
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Chicken stewed in palm oil (dendê) with okra, garlic and chilli. National dish. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-muamba-de-ginguba",
+  "name": "Muamba de ginguba",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 190,
+   "protein": 13.0,
+   "carbs": 7.0,
+   "fat": 12.0,
+   "fiber": 1.5
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Chicken or meat in a groundnut (peanut) sauce. Rich and nutty. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-mufete-grilled-fish",
+  "name": "Mufete (grilled fish)",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 150,
+   "protein": 22.0,
+   "carbs": 0.0,
+   "fat": 7.0,
+   "fiber": 0.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 200
+   }
+  ],
+  "estimated": true,
+  "recipe": "Charcoal-grilled fish, classically served with beans, cassava, sweet potato and palm-oil onion sauce (sides separate). Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-pirao",
+  "name": "Pirão",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 100,
+   "protein": 0.6,
+   "carbs": 24.0,
+   "fat": 0.2,
+   "fiber": 0.8
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Soft cassava-flour porridge thickened in broth, served alongside fish or meat. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-ao-quitetas-clam-stew",
+  "name": "Quitetas (clam stew)",
+  "category": "Angolan",
+  "nutrition": {
+   "calories": 110,
+   "protein": 14.0,
+   "carbs": 4.0,
+   "fat": 4.0,
+   "fiber": 0.5
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 200
+   }
+  ],
+  "estimated": true,
+  "recipe": "Small clams stewed with onion, tomato, garlic and coriander. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-aboboi-bambara-beans-stew",
+  "name": "Aboboi (bambara beans stew)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 130,
+   "protein": 8.0,
+   "carbs": 18.0,
+   "fat": 2.5,
+   "fiber": 6.0
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Bambara groundnut stew, traditionally eaten with tatale. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-ampesi",
+  "name": "Ampesi",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 125,
+   "protein": 1.6,
+   "carbs": 29.0,
+   "fat": 0.3,
+   "fiber": 3.8
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Boiled yam, plantain and/or cocoyam served with a stew or kontomire. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-angwamu-oily-rice",
+  "name": "Angwamu (oily rice)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 190,
+   "protein": 3.0,
+   "carbs": 28.0,
+   "fat": 7.5,
+   "fiber": 0.8
+  },
+  "portions": [
+   {
+    "label": "1 plate",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Rice cooked with oil and often black-eyed peas; sometimes called 'oily rice'. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-asaana",
+  "name": "Asaana",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 60,
+   "protein": 0.8,
+   "carbs": 14.0,
+   "fat": 0.3,
+   "fiber": 0.3
+  },
+  "portions": [
+   {
+    "label": "1 glass",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Drink from fermented, caramelised corn, sweetened. Served chilled. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-atwemo-chin-chin",
+  "name": "Atwemo (chin chin)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 470,
+   "protein": 8.0,
+   "carbs": 55.0,
+   "fat": 24.0,
+   "fiber": 1.8
+  },
+  "portions": [
+   {
+    "label": "1 handful",
+    "grams": 50
+   }
+  ],
+  "estimated": true,
+  "recipe": "Crunchy fried sweet dough strips. Snack, stores well. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-banku",
+  "name": "Banku",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 150,
+   "protein": 2.5,
+   "carbs": 33.0,
+   "fat": 0.6,
+   "fiber": 1.5
+  },
+  "portions": [
+   {
+    "label": "1 ball",
+    "grams": 200
+   }
+  ],
+  "estimated": true,
+  "recipe": "Fermented corn and cassava dough cooked to a smooth, slightly sour swallow. Served with soup, stew or pepper. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-bofrot-puff-puff",
+  "name": "Bofrot (puff puff)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 310,
+   "protein": 5.0,
+   "carbs": 40.0,
+   "fat": 14.0,
+   "fiber": 1.5
+  },
+  "portions": [
+   {
+    "label": "2 balls",
+    "grams": 60
+   }
+  ],
+  "estimated": true,
+  "recipe": "Sweet deep-fried dough balls (bofrot / togbei). Snack with tea or koko. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-boiled-plantain",
+  "name": "Boiled plantain",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 122,
+   "protein": 1.3,
+   "carbs": 32.0,
+   "fat": 0.4,
+   "fiber": 2.3
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 200
+   }
+  ],
+  "estimated": true,
+  "recipe": "Ripe or green plantain boiled. Eaten with beans stew, kontomire or garden egg. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-boiled-yam",
+  "name": "Boiled yam",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 118,
+   "protein": 1.5,
+   "carbs": 28.0,
+   "fat": 0.2,
+   "fiber": 4.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Plain boiled yam. Eaten with garden egg stew, kontomire or palava sauce. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-brukina",
+  "name": "Brukina",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 110,
+   "protein": 4.0,
+   "carbs": 18.0,
+   "fat": 2.5,
+   "fiber": 0.6
+  },
+  "portions": [
+   {
+    "label": "1 cup",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Fermented milk with milled millet (burkina/degue), sweetened. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-chofi-grilled-tilapia",
+  "name": "Chofi (grilled tilapia)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 150,
+   "protein": 22.0,
+   "carbs": 0.0,
+   "fat": 7.0,
+   "fiber": 0.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 200
+   }
+  ],
+  "estimated": true,
+  "recipe": "Whole grilled tilapia, usually served with banku and pepper (pepper logged separately). Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-egusi-soup",
+  "name": "Egusi soup",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 200,
+   "protein": 9.0,
+   "carbs": 7.0,
+   "fat": 16.0,
+   "fiber": 3.0
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Ground melon seed soup with greens, palm oil and meat or fish. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-etor-mashed-plantain",
+  "name": "Etor (mashed plantain)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 200,
+   "protein": 4.0,
+   "carbs": 28.0,
+   "fat": 8.0,
+   "fiber": 2.5
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 200
+   }
+  ],
+  "estimated": true,
+  "recipe": "Mashed ripe plantain or yam with palm oil, often served with boiled egg and groundnuts. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-fante-fante-fish-stew",
+  "name": "Fante fante (fish stew)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 140,
+   "protein": 10.0,
+   "carbs": 5.0,
+   "fat": 9.0,
+   "fiber": 1.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 200
+   }
+  ],
+  "estimated": true,
+  "recipe": "Fresh fish stewed in palm oil with tomato, pepper and herbs (Fante 'fante fante'). Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-fried-ripe-plantain",
+  "name": "Fried ripe plantain",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 190,
+   "protein": 1.5,
+   "carbs": 30.0,
+   "fat": 7.0,
+   "fiber": 2.3
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 150
+   }
+  ],
+  "estimated": true,
+  "recipe": "Ripe plantain slices shallow- or deep-fried (unspiced). The side known as 'kelewele' when spiced. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-fried-yam",
+  "name": "Fried yam",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 190,
+   "protein": 2.0,
+   "carbs": 30.0,
+   "fat": 7.0,
+   "fiber": 3.5
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 200
+   }
+  ],
+  "estimated": true,
+  "recipe": "Yam boiled then deep-fried. Street food, usually with shito or pepper. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-fufu",
+  "name": "Fufu",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 130,
+   "protein": 1.0,
+   "carbs": 31.0,
+   "fat": 0.2,
+   "fiber": 1.8
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Pounded cassava and plantain (or cocoyam) swallow. Served in soup; the soup is logged separately. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-garden-egg-stew",
+  "name": "Garden egg stew",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 120,
+   "protein": 2.5,
+   "carbs": 7.0,
+   "fat": 9.0,
+   "fiber": 2.5
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 150
+   }
+  ],
+  "estimated": true,
+  "recipe": "African eggplant simmered with onion, tomato, pepper and oil, often with fish. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-gari",
+  "name": "Gari",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 357,
+   "protein": 1.5,
+   "carbs": 85.0,
+   "fat": 0.5,
+   "fiber": 3.6
+  },
+  "portions": [
+   {
+    "label": "1 handful (dry)",
+    "grams": 40
+   }
+  ],
+  "estimated": true,
+  "recipe": "Dry roasted cassava granules. Sprinkled over waakye/beans or soaked. Dry weight — soaks up water. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-gari-soakings",
+  "name": "Gari soakings",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 180,
+   "protein": 4.0,
+   "carbs": 32.0,
+   "fat": 4.0,
+   "fiber": 2.0
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Gari soaked in water with sugar, milk and roasted groundnuts. Varies widely with add-ins. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-ghana-fried-rice",
+  "name": "Ghana fried rice",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 180,
+   "protein": 4.5,
+   "carbs": 26.0,
+   "fat": 6.0,
+   "fiber": 1.2
+  },
+  "portions": [
+   {
+    "label": "1 plate",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Rice stir-fried with vegetables, egg and seasoning. Usually with chicken or shito. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-gob3-beans-and-gari",
+  "name": "Gob3 (beans and gari)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 170,
+   "protein": 6.0,
+   "carbs": 25.0,
+   "fat": 5.0,
+   "fiber": 5.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Street plate of beans with gari, fried plantain, oil and pepper (also called gobe). Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-groundnut-soup",
+  "name": "Groundnut soup",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 120,
+   "protein": 6.0,
+   "carbs": 6.0,
+   "fat": 8.0,
+   "fiber": 1.5
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 300
+   }
+  ],
+  "estimated": true,
+  "recipe": "Peanut-paste soup with tomato, onion and meat or fish. Served with fufu, omo tuo or rice balls. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-hausa-koko",
+  "name": "Hausa koko",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 65,
+   "protein": 2.0,
+   "carbs": 13.0,
+   "fat": 0.6,
+   "fiber": 1.0
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 300
+   }
+  ],
+  "estimated": true,
+  "recipe": "Spiced millet porridge with ginger, pepper and cloves. Breakfast staple. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-jollof-rice",
+  "name": "Jollof rice",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 150,
+   "protein": 3.0,
+   "carbs": 25.0,
+   "fat": 4.5,
+   "fiber": 1.2
+  },
+  "portions": [
+   {
+    "label": "1 plate",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Rice cooked in a tomato, onion, pepper and spice base with oil. Often served with chicken, fish or salad (counted separately). Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-jollof-spaghetti",
+  "name": "Jollof spaghetti",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 160,
+   "protein": 4.5,
+   "carbs": 27.0,
+   "fat": 4.0,
+   "fiber": 1.5
+  },
+  "portions": [
+   {
+    "label": "1 plate",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Spaghetti cooked in a jollof-style tomato-pepper sauce. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-kaklo",
+  "name": "Kaklo",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 230,
+   "protein": 2.5,
+   "carbs": 34.0,
+   "fat": 10.0,
+   "fiber": 2.2
+  },
+  "portions": [
+   {
+    "label": "3 balls",
+    "grams": 100
+   }
+  ],
+  "estimated": true,
+  "recipe": "Spiced ripe-plantain batter fried into small balls. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-kelewele",
+  "name": "Kelewele",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 210,
+   "protein": 1.5,
+   "carbs": 35.0,
+   "fat": 8.0,
+   "fiber": 2.5
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 120
+   }
+  ],
+  "estimated": true,
+  "recipe": "Ripe plantain cubes spiced with ginger, pepper and nutmeg, then deep-fried. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-kenkey",
+  "name": "Kenkey",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 160,
+   "protein": 3.0,
+   "carbs": 34.0,
+   "fat": 1.0,
+   "fiber": 2.0
+  },
+  "portions": [
+   {
+    "label": "1 ball",
+    "grams": 200
+   }
+  ],
+  "estimated": true,
+  "recipe": "Fermented corn dough wrapped and boiled (Ga or Fante style). Eaten with pepper sauce, fish or stew. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-khebab-beef-kebab",
+  "name": "Khebab (beef kebab)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 220,
+   "protein": 25.0,
+   "carbs": 2.0,
+   "fat": 13.0,
+   "fiber": 0.6
+  },
+  "portions": [
+   {
+    "label": "1 stick",
+    "grams": 90
+   }
+  ],
+  "estimated": true,
+  "recipe": "Skewered grilled beef with pepper spice; leaner or fattier by cut. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-koko-corn-porridge",
+  "name": "Koko (corn porridge)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 60,
+   "protein": 1.5,
+   "carbs": 12.0,
+   "fat": 0.5,
+   "fiber": 0.8
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 300
+   }
+  ],
+  "estimated": true,
+  "recipe": "Fermented corn porridge, smooth and slightly sour. Breakfast with koose or bread. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-kokonte",
+  "name": "Kokonte",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 140,
+   "protein": 1.0,
+   "carbs": 34.0,
+   "fat": 0.2,
+   "fiber": 1.6
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 200
+   }
+  ],
+  "estimated": true,
+  "recipe": "Swallow from dried cassava flour (face-the-wall). Served with groundnut or palm nut soup. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-kontomire-stew-palava-sauce",
+  "name": "Kontomire stew (palava sauce)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 180,
+   "protein": 7.0,
+   "carbs": 6.0,
+   "fat": 14.0,
+   "fiber": 3.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 150
+   }
+  ],
+  "estimated": true,
+  "recipe": "Cocoyam leaves with egusi, palm oil, onion and fish or meat. Served with yam or plantain. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-koose-bean-cakes",
+  "name": "Koose (bean cakes)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 210,
+   "protein": 8.0,
+   "carbs": 18.0,
+   "fat": 12.0,
+   "fiber": 4.0
+  },
+  "portions": [
+   {
+    "label": "3 pieces",
+    "grams": 80
+   }
+  ],
+  "estimated": true,
+  "recipe": "Fried spiced black-eyed pea fritters (akara). Breakfast with koko or bread. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-lamugin",
+  "name": "Lamugin",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 45,
+   "protein": 0.3,
+   "carbs": 11.0,
+   "fat": 0.1,
+   "fiber": 0.2
+  },
+  "portions": [
+   {
+    "label": "1 glass",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Spiced ginger drink, sweetened (lamugine). Refreshing and sharp. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-light-soup",
+  "name": "Light soup",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 55,
+   "protein": 6.0,
+   "carbs": 3.0,
+   "fat": 2.0,
+   "fiber": 0.8
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 300
+   }
+  ],
+  "estimated": true,
+  "recipe": "Clear tomato-pepper broth with goat, chicken or fish. Served with fufu or rice balls. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-meat-pie",
+  "name": "Meat pie",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 300,
+   "protein": 8.0,
+   "carbs": 28.0,
+   "fat": 18.0,
+   "fiber": 1.5
+  },
+  "portions": [
+   {
+    "label": "1 pie",
+    "grams": 120
+   }
+  ],
+  "estimated": true,
+  "recipe": "Flaky pastry filled with minced beef, onion and potato. Pastry snack. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-mpotompoto-yam-pottage",
+  "name": "Mpotompoto (yam pottage)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 110,
+   "protein": 2.5,
+   "carbs": 18.0,
+   "fat": 3.0,
+   "fiber": 2.0
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 300
+   }
+  ],
+  "estimated": true,
+  "recipe": "Mashed yam or cocoyam cooked soft with tomato, onion and oil. Common weaning and comfort food. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-nkate-cake",
+  "name": "Nkate cake",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 480,
+   "protein": 18.0,
+   "carbs": 45.0,
+   "fat": 27.0,
+   "fiber": 5.0
+  },
+  "portions": [
+   {
+    "label": "1 bar",
+    "grams": 40
+   }
+  ],
+  "estimated": true,
+  "recipe": "Peanut brittle of roasted groundnuts set in caramelised sugar. Dense snack. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-nkontomire-steamed-cocoyam-leaves",
+  "name": "Nkontomire (steamed cocoyam leaves)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 70,
+   "protein": 4.0,
+   "carbs": 6.0,
+   "fat": 3.0,
+   "fiber": 3.5
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 150
+   }
+  ],
+  "estimated": true,
+  "recipe": "Steamed, chopped cocoyam leaves lightly dressed. Base for palava sauce. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-oblayo-corn-porridge",
+  "name": "Oblayo (corn porridge)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 70,
+   "protein": 1.8,
+   "carbs": 14.0,
+   "fat": 0.8,
+   "fiber": 0.8
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 300
+   }
+  ],
+  "estimated": true,
+  "recipe": "Sweetened roasted-corn porridge, lighter than koko. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-okro-soup",
+  "name": "Okro soup",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 90,
+   "protein": 4.0,
+   "carbs": 6.0,
+   "fat": 5.0,
+   "fiber": 2.5
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 300
+   }
+  ],
+  "estimated": true,
+  "recipe": "Okra soup with palm oil, meat and fish, sometimes with greens. Also made as okro stew. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-omo-tuo-rice-balls",
+  "name": "Omo tuo (rice balls)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 130,
+   "protein": 2.5,
+   "carbs": 28.0,
+   "fat": 0.3,
+   "fiber": 0.6
+  },
+  "portions": [
+   {
+    "label": "3 balls",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Soft mashed rice shaped into balls, served with groundnut or palm nut soup. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-palm-nut-soup-abenkwan",
+  "name": "Palm nut soup (Abenkwan)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 135,
+   "protein": 5.0,
+   "carbs": 4.0,
+   "fat": 11.0,
+   "fiber": 1.5
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 300
+   }
+  ],
+  "estimated": true,
+  "recipe": "Soup from palm-fruit pulp with meat, fish and aromatics. Rich in palm oil. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-plain-white-rice",
+  "name": "Plain white rice",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 130,
+   "protein": 2.7,
+   "carbs": 28.0,
+   "fat": 0.3,
+   "fiber": 0.4
+  },
+  "portions": [
+   {
+    "label": "1 plate",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Boiled or steamed white rice, the base for stew, soup or sauce. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-red-red",
+  "name": "Red red",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 150,
+   "protein": 6.0,
+   "carbs": 18.0,
+   "fat": 6.0,
+   "fiber": 5.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Black-eyed pea stew cooked in palm oil with tomato. Served with fried plantain (logged separately). Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-rice-water",
+  "name": "Rice water",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 55,
+   "protein": 1.0,
+   "carbs": 12.0,
+   "fat": 0.3,
+   "fiber": 0.3
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 300
+   }
+  ],
+  "estimated": true,
+  "recipe": "Thin rice porridge, usually sweetened with milk and sugar. Breakfast. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-shito",
+  "name": "Shito",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 350,
+   "protein": 6.0,
+   "carbs": 12.0,
+   "fat": 30.0,
+   "fiber": 3.0
+  },
+  "portions": [
+   {
+    "label": "1 tbsp",
+    "grams": 20
+   }
+  ],
+  "estimated": true,
+  "recipe": "Dark pepper sauce of dried fish/shrimp, chilli, onion and oil. Condiment — small amounts. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-sobolo",
+  "name": "Sobolo",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 40,
+   "protein": 0.2,
+   "carbs": 10.0,
+   "fat": 0.0,
+   "fiber": 0.2
+  },
+  "portions": [
+   {
+    "label": "1 glass",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Hibiscus (bissap) drink with ginger and spices, usually sweetened. Grams ≈ millilitres here but logged by weight. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-spring-rolls",
+  "name": "Spring rolls",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 250,
+   "protein": 6.0,
+   "carbs": 28.0,
+   "fat": 12.0,
+   "fiber": 1.8
+  },
+  "portions": [
+   {
+    "label": "2 rolls",
+    "grams": 90
+   }
+  ],
+  "estimated": true,
+  "recipe": "Fried wrappers with vegetable and sometimes meat filling. Party and street snack. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-suya-chinchinga",
+  "name": "Suya / Chinchinga",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 230,
+   "protein": 26.0,
+   "carbs": 3.0,
+   "fat": 13.0,
+   "fiber": 1.0
+  },
+  "portions": [
+   {
+    "label": "1 stick",
+    "grams": 100
+   }
+  ],
+  "estimated": true,
+  "recipe": "Grilled beef skewers coated in spiced groundnut 'suya' rub. Street grill. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-tatale",
+  "name": "Tatale",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 220,
+   "protein": 3.0,
+   "carbs": 32.0,
+   "fat": 9.0,
+   "fiber": 2.5
+  },
+  "portions": [
+   {
+    "label": "2 pieces",
+    "grams": 100
+   }
+  ],
+  "estimated": true,
+  "recipe": "Overripe plantain mashed with onion, flour and spice, fried as pancakes. Served with aboboi. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-toffee-coconut-candy",
+  "name": "Toffee (coconut candy)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 430,
+   "protein": 4.0,
+   "carbs": 55.0,
+   "fat": 23.0,
+   "fiber": 5.0
+  },
+  "portions": [
+   {
+    "label": "2 pieces",
+    "grams": 30
+   }
+  ],
+  "estimated": true,
+  "recipe": "Caramelised coconut candy sold by the roadside. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-tom-brown",
+  "name": "Tom brown",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 90,
+   "protein": 3.0,
+   "carbs": 16.0,
+   "fat": 1.5,
+   "fiber": 2.0
+  },
+  "portions": [
+   {
+    "label": "1 bowl",
+    "grams": 300
+   }
+  ],
+  "estimated": true,
+  "recipe": "Porridge of roasted, milled grains (maize/soya/groundnut). Often for children. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-tomato-stew",
+  "name": "Tomato stew",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 150,
+   "protein": 3.0,
+   "carbs": 8.0,
+   "fat": 11.0,
+   "fiber": 1.8
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 120
+   }
+  ],
+  "estimated": true,
+  "recipe": "Blended tomato, onion and pepper fried in oil with meat or fish. The all-purpose stew for rice and yam. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-tuo-zaafi-tz",
+  "name": "Tuo Zaafi (TZ)",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 110,
+   "protein": 2.0,
+   "carbs": 25.0,
+   "fat": 0.3,
+   "fiber": 1.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Northern maize (and cassava/millet) swallow cooked soft. Served with ayoyo or green leaf soup. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-waakye",
+  "name": "Waakye",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 140,
+   "protein": 5.0,
+   "carbs": 25.0,
+   "fat": 2.0,
+   "fiber": 3.5
+  },
+  "portions": [
+   {
+    "label": "1 plate",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Rice and cowpeas boiled with dried sorghum leaves. Plain base; stew, gari, egg and spaghetti are logged separately. Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ },
+ {
+  "id": "kenko-gh-yor-ke-gari",
+  "name": "Yor ke gari",
+  "category": "Ghanaian",
+  "nutrition": {
+   "calories": 160,
+   "protein": 6.0,
+   "carbs": 28.0,
+   "fat": 3.0,
+   "fiber": 5.0
+  },
+  "portions": [
+   {
+    "label": "1 serving",
+    "grams": 250
+   }
+  ],
+  "estimated": true,
+  "recipe": "Cowpeas cooked and mixed with gari and palm oil (beans and gari). Community nutrition estimate per 100 g cooked edible portion; home recipes vary, so review and edit before logging."
+ }
+]

@@ -3,6 +3,7 @@ import { useIsMutating } from "@tanstack/react-query";
 import { COPY_MEAL_KEY } from "@/lib/copyMeal";
 import { useMemo, useState } from "react";
 import foodsData from "@/data/food-catalog.json";
+import africanDishes from "@/data/african-dishes.json";
 import { catalogDish, catalogNutrition, searchCatalog, PREPARATIONS, type Preparation, type CatalogFood } from "@/lib/catalog";
 import { useAddDish, useDishes } from "@/hooks/useDishes";
 import { finiteNumber } from "@/lib/tracking";
@@ -11,8 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-const foods: CatalogFood[] = foodsData;
-const categories = ["Fruits", "Vegetables", "Beans & legumes", "Drinks", "Cocktails", "Mocktails", "Meals", "Grains", "Dairy & eggs", "Nuts & seeds"];
+const foods: CatalogFood[] = [...africanDishes, ...foodsData];
+const categories = ["Ghanaian", "Angolan", "Fruits", "Vegetables", "Beans & legumes", "Drinks", "Cocktails", "Mocktails", "Meals", "Grains", "Dairy & eggs", "Nuts & seeds"];
 export default function FoodCatalog({ onUse, onAdd, basketCount }: { basketCount: number; onUse: (name: string, values: ReturnType<typeof catalogNutrition>) => void; onAdd: (food: CatalogFood, grams: number) => void }) {
   const batchPending = useIsMutating({ mutationKey: COPY_MEAL_KEY }) > 0;
   const addDish = useAddDish();
@@ -32,9 +33,9 @@ export default function FoodCatalog({ onUse, onAdd, basketCount }: { basketCount
     catch (e) { error = errorMessage(e); }
   }
   return <section className="space-y-4">
-    <div><h2 className="text-xl font-bold">Food & drink catalog</h2><p className="mt-1 text-sm text-muted-foreground">{foods.length.toLocaleString()} reference foods and drinks, ready to measure. Match the preparation: raw, cooked, canned or dried.</p></div>
+    <div><h2 className="text-xl font-bold">Food & drink catalog</h2><p className="mt-1 text-sm text-muted-foreground">{foods.length.toLocaleString()} foods to measure — Ghanaian and Angolan home dishes plus broad reference foods. Match the preparation: raw, cooked, canned or dried.</p></div>
     <Label htmlFor="catalog-search">Find a food or drink</Label>
-    <Input id="catalog-search" type="search" placeholder="Banana, black beans, coffee, pina colada…" value={query} onChange={e => { setQuery(e.target.value); setLimit(30); }} />
+    <Input id="catalog-search" type="search" placeholder="Jollof, waakye, banku, groundnut soup, funge…" value={query} onChange={e => { setQuery(e.target.value); setLimit(30); }} />
     <Label htmlFor="catalog-category">Category</Label>
     <select id="catalog-category" className="h-10 w-full rounded-md border bg-card px-3 text-sm" value={category} onChange={e => { setCategory(e.target.value); setLimit(30); }}><option value="">All categories</option>{categories.map(c => <option key={c}>{c}</option>)}</select>
     <Label htmlFor="catalog-preparation">Preparation</Label>
@@ -59,6 +60,6 @@ export default function FoodCatalog({ onUse, onAdd, basketCount }: { basketCount
     <div className="space-y-2">{matching.slice(0,limit).map(food => <button key={food.id} className={`w-full rounded-xl border p-3 text-left ${selected?.id === food.id ? "border-primary bg-muted" : "bg-card"}`} onClick={() => { setSelected(food); setPortion(food.portions.length ? "0" : "grams"); setAmount(food.portions.length ? "1" : "100"); }} aria-pressed={selected?.id === food.id}><span className="block text-sm font-semibold">{food.name}</span><span className="text-xs text-muted-foreground">{food.category} · {food.nutrition.calories} cal / 100 g{food.estimated ? " · estimate" : ""}</span></button>)}</div>
     {!matching.length && <p className="rounded-xl bg-muted p-4 text-sm">No match yet. Try a simpler name or another category, or use Quick add for your label or recipe.</p>}
     {matching.length > limit && <Button variant="secondary" className="w-full" onClick={() => setLimit(limit+30)}>Show more</Button>}
-    <p className="text-xs text-muted-foreground">USDA SR Legacy reference data plus Kenko mocktail recipes. Broad coverage, not every food worldwide. Available offline after the catalog has loaded.</p>
+    <p className="text-xs text-muted-foreground">Ghanaian and Angolan home dishes are community estimates per 100 g — review and edit before logging. Reference foods are USDA SR Legacy data. Available offline after the catalog has loaded.</p>
   </section>;
 }

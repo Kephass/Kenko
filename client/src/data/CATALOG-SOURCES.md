@@ -12,3 +12,14 @@ Contains 3195 entries from selected source categories, including raw/cooked/cann
 Cocktails and prepared meals are marked estimates because recipes vary. Kenko mocktails are example recipes calculated by ingredient weight with explicit FDC ingredient IDs; exclude ice and garnish. They are not official USDA finished-drink records. Gram weights must not be interpreted as ml. Users can review/edit totals before logging.
 
 Regenerate using client/scripts/import-catalog.py and the official ZIP; no runtime API key or database migration is needed.
+
+## Ghanaian & Angolan home dishes (african-dishes.json)
+
+Curated, community nutrition **estimates** per 100 g cooked edible portion for
+Ghanaian and Angolan home cooking — the cuisines mainstream trackers underserve.
+No USDA/official finished-dish record is claimed; home recipes vary, so every
+entry is flagged `estimated: true` and the user reviews and edits totals before
+logging. Grams are weight, not millilitres.
+
+Regenerate with `python3 client/scripts/build-african-dishes.py`. Edit the
+curated list in that script and re-run; no USDA ZIP, API key or migration needed.
