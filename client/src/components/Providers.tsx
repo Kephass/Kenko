@@ -11,26 +11,24 @@ import { del, get, set } from "idb-keyval";
 import { usePathname, useRouter } from "next/navigation";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { registerWaterMutationDefaults } from "@/lib/waterMutations";
 import { registerMealLogMutationDefaults } from "@/lib/mealLogMutations";
+import { registerWaterPreferenceDefaults } from "@/lib/waterPreferenceMutations";
+import { registerSavedMealDefaults } from "@/lib/savedMeals";
+import { registerMealCopyDefaults } from "@/lib/copyMeal";
+import { registerDishMutationDefaults } from "@/lib/dishMutations";
+import { registerTargetSnapshotDefaults } from "@/lib/targetSnapshots";
+import { registerProfileDefaults } from "@/lib/profileMutations";
 import OfflineBanner from "@/components/OfflineBanner";
+import SyncStatus from "@/components/SyncStatus";
+import { retainUnsyncedCache } from "@/lib/offlineRetention";
+import { migrateLegacyCache } from "@/lib/legacyCache";
 
 const AuthContext = createContext<Session | null>(null);
 export const useSession = () => useContext(AuthContext);
 
 const CACHE_MAX_AGE = 1000 * 60 * 60 * 24; // 24h
-
-const queryClient = new QueryClient({
-  // gcTime must outlive maxAge or persisted queries get collected before restore.
-  defaultOptions: { queries: { gcTime: CACHE_MAX_AGE } },
-});
-registerMealLogMutationDefaults(queryClient);
-
-// IndexedDB persister: structured clone, no JSON round-trip needed.
-const persister: Persister = {
-  persistClient: (client: PersistedClient) => set("kenko-query-cache", client),
-  restoreClient: () => get<PersistedClient>("kenko-query-cache"),
-  removeClient: () => del("kenko-query-cache"),
-};
+const PUBLIC_ROUTES = new Set(["/login", "/reset-password"]);
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -48,33 +46,56 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!loading && !session && pathname !== "/login") router.replace("/login");
+    if (!loading && !session && !PUBLIC_ROUTES.has(pathname)) router.replace("/login");
   }, [loading, session, pathname, router]);
 
   if (loading) return null;
 
   const userId = session?.user.id ?? "anon";
 
+  if (!session && !PUBLIC_ROUTES.has(pathname)) return null;
+  return <UserData key={userId} session={session}>{children}</UserData>;
+}
+
+function UserData({ session, children }: { session: Session | null; children: React.ReactNode }) {
+  const userId = session?.user.id ?? "anon";
+  const [queryClient] = useState(() => {
+    const client = new QueryClient({ defaultOptions: { queries: { gcTime: CACHE_MAX_AGE }, mutations: { gcTime: Infinity } } });
+    registerMealLogMutationDefaults(client);
+    registerWaterMutationDefaults(client);
+    registerDishMutationDefaults(client);
+    registerMealCopyDefaults(client);
+    registerSavedMealDefaults(client);
+    registerWaterPreferenceDefaults(client);
+    registerTargetSnapshotDefaults(client);
+    registerProfileDefaults(client);
+    return client;
+  });
+  const [persister] = useState<Persister>(() => {
+    const key = `kenko-query-cache:${userId}`;
+    return {
+      persistClient: (client: PersistedClient) => set(key, client),
+      restoreClient: async () => retainUnsyncedCache((await get<PersistedClient>(key)) ?? migrateLegacyCache(await get<PersistedClient>("kenko-query-cache"), userId), userId),
+      removeClient: () => del(key),
+    };
+  });
+  useEffect(() => () => { void queryClient.cancelQueries(); }, [queryClient]);
   return (
-    // Keyed by user so a login/logout remounts and re-restores with the right buster.
     <PersistQueryClientProvider
-      key={userId}
       client={queryClient}
       persistOptions={{
         persister,
         maxAge: CACHE_MAX_AGE,
         buster: userId,
         dehydrateOptions: {
-          // Only queue mutations with registered defaults (they can resume after a
-          // reload); everything else — notably the AI log-meal call — is never persisted.
-          shouldDehydrateMutation: (mutation) =>
-            mutation.state.isPaused && !!mutation.options.mutationKey,
+          shouldDehydrateMutation: (mutation) => (mutation.state.isPaused || mutation.state.status === "error") && !!mutation.options.mutationKey,
         },
       }}
       onSuccess={() => queryClient.resumePausedMutations()}
     >
       <AuthContext.Provider value={session}>
         <OfflineBanner />
+        <SyncStatus />
         {children}
       </AuthContext.Provider>
     </PersistQueryClientProvider>

@@ -2,10 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import type { TablesUpdate } from "@/lib/types";
+import type { Tables, TablesUpdate } from "@/lib/types";
 import { useSession } from "@/components/Providers";
-import { ADD_MANUAL_MEAL_KEY, type ManualMealInput } from "@/lib/mealLogMutations";
-import { dayRange } from "@/lib/utils";
+import { ADD_MANUAL_MEAL_KEY, UPDATE_MEAL_KEY, DELETE_MEAL_KEY, RESTORE_MEAL_KEY, type MealUpdate, type ManualMealInput } from "@/lib/mealLogMutations";
+import { loadLogStreak } from "@/lib/logStreak";
+import { dayRange, localDateISO } from "@/lib/utils";
 
 export function useMealLogsForDay(day: string) {
   return useQuery({
@@ -13,42 +14,36 @@ export function useMealLogsForDay(day: string) {
     staleTime: 60_000,
     queryFn: async () => {
       const range = dayRange(day);
-      const { data, error } = await supabase
-        .from("meal_logs")
-        .select("*")
-        .gte("logged_at", range.start)
-        .lt("logged_at", range.end)
-        .order("logged_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      const rows: Tables<"meal_logs">[] = [];
+      for (let offset = 0; ; offset += 500) {
+        const { data, error } = await supabase.from("meal_logs").select("*")
+          .gte("logged_at", range.start).lt("logged_at", range.end)
+          .order("logged_at", { ascending: false }).order("id", { ascending: false })
+          .range(offset, offset + 499);
+        if (error) throw error;
+        rows.push(...data);
+        if (data.length < 500) return rows;
+      }
     },
   });
 }
 
 /** Consecutive days with a confirmed log; today counts if logged, else counted from yesterday. */
 export function useLogStreak() {
+  const session = useSession();
+  const today = localDateISO();
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   return useQuery({
-    queryKey: ["meal_logs", "streak"],
+    queryKey: ["meal_logs", "streak", session?.user.id, today, timezone],
+    enabled: !!session,
     staleTime: 60_000,
-    queryFn: async () => {
-      const since = new Date();
-      since.setDate(since.getDate() - 365);
-      const { data, error } = await supabase
-        .from("meal_logs")
-        .select("logged_at")
-        .eq("confirmed", true)
-        .gte("logged_at", since.toISOString());
+    queryFn: () => loadLogStreak(async (start, end) => {
+      const { data, error } = await supabase.rpc("daily_nutrition_summary_v2", {
+        p_user_id: session!.user.id, p_start: start, p_end: end, p_tz: timezone,
+      });
       if (error) throw error;
-      const days = new Set(data.map((r) => new Date(r.logged_at).toDateString()));
-      let streak = 0;
-      const cur = new Date();
-      if (!days.has(cur.toDateString())) cur.setDate(cur.getDate() - 1);
-      while (days.has(cur.toDateString())) {
-        streak++;
-        cur.setDate(cur.getDate() - 1);
-      }
-      return streak;
-    },
+      return data.filter(row => Number(row.meal_count) > 0).map(row => row.day);
+    }, today),
   });
 }
 
@@ -80,34 +75,11 @@ export function useAddManualMealLog() {
 }
 
 export function useUpdateMealLog() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: { id: string; edits: TablesUpdate<"meal_logs"> }) => {
-      const { error } = await supabase.from("meal_logs").update(input.edits).eq("id", input.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["meal_logs"] });
-      qc.invalidateQueries({ queryKey: ["daily_summary"] });
-      qc.invalidateQueries({ queryKey: ["weekly_balance"] });
-    },
-  });
+  return useMutation<void, Error, MealUpdate>({ mutationKey: UPDATE_MEAL_KEY });
 }
 
-/** Deletes any log, confirmed or draft. */
 export function useDeleteMealLog() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("meal_logs").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["meal_logs"] });
-      qc.invalidateQueries({ queryKey: ["daily_summary"] });
-      qc.invalidateQueries({ queryKey: ["weekly_balance"] });
-    },
-  });
+  return useMutation<void, Error, { row: Tables<"meal_logs"> }>({ mutationKey: DELETE_MEAL_KEY });
 }
 
 /** Confirm (or adjust) a draft row - a plain UPDATE by id, not a re-submit. */
@@ -139,4 +111,22 @@ export function useDiscardMealLog() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["meal_logs"] }),
   });
+}
+
+/** Recent confirmed entries can be reused without another AI request. */
+export function useRecentMeals() {
+  const session = useSession();
+  return useQuery({
+    queryKey: ["meal_logs", "recent"],
+    enabled: !!session,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("meal_logs").select("*").eq("confirmed", true).order("logged_at", { ascending: false }).limit(30);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useRestoreMealLog() {
+  return useMutation<void, Error, { row: Tables<"meal_logs"> }>({ mutationKey: RESTORE_MEAL_KEY });
 }

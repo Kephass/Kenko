@@ -11,7 +11,8 @@
     "db:push": "cd .. && supabase db push",
     "functions:serve": "cd .. && supabase functions serve log-meal --env-file .env",
     "functions:deploy": "cd .. && supabase functions deploy log-meal",
-    "types:gen": "cd .. && supabase gen types typescript --linked > client/src/lib/types.ts"
+    "types:gen": "cd .. && supabase gen types typescript --linked > client/src/lib/types.ts",
+    "test": "node tests/run.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",

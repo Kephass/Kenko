@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useProfile } from "@/hooks/useProfile";
+import type { Tables } from "@/lib/types";
+import { PROFILE_WRITE_KEY, validateProfileWrite, type ProfileWrite } from "@/lib/profileMutations";
+import { parseTargets } from "@/lib/goals";
+import { finiteNumber } from "@/lib/tracking";
 import { errorMessage } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -26,71 +31,76 @@ function toISODate(d: Date) {
 }
 
 export default function SettingsPage() {
+  const profile = useProfile();
+  if (profile.isPending) return <p role="status">Loading your settings…</p>;
+  if (profile.isError) return <p role="alert" className="text-sm text-destructive">{errorMessage(profile.error)}</p>;
+  return <ProfileForm initial={profile.data} />;
+}
+
+function ProfileForm({ initial }: { initial: Tables<"user_profile"> | null }) {
   const session = useSession();
-  const qc = useQueryClient();
-
-  const profile = useQuery({
-    queryKey: ["user_profile"],
-    enabled: !!session,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_profile")
-        .select("*")
-        .eq("user_id", session!.user.id)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const [form, setForm] = useState({
-    height_cm: "",
-    birth_date: "",
-    biological_sex: "male",
-    goal: "maintain",
-    activity_multiplier: "1.375",
-  });
+  const [form, setForm] = useState(() => ({
+    height_cm: initial?.height_cm?.toString() ?? "",
+    birth_date: initial?.birth_date ?? "",
+    biological_sex: initial?.biological_sex ?? "male",
+    goal: initial?.goal ?? "maintain",
+    activity_multiplier: initial?.activity_multiplier?.toString() ?? "1.375",
+    calorie_target_override: initial?.calorie_target_override?.toString() ?? "",
+    protein_pct: String(initial?.protein_pct ?? 30),
+    carbs_pct: String(initial?.carbs_pct ?? 40),
+    fat_pct: String(initial?.fat_pct ?? 30),
+    water_goal_ml: String(initial?.water_goal_ml ?? 2000),
+    fiber_goal_g: String(initial?.fiber_goal_g ?? 25),
+  }));
   const [dateOpen, setDateOpen] = useState(false);
 
-  useEffect(() => {
-    if (profile.data) {
-      setForm({
-        height_cm: profile.data.height_cm?.toString() ?? "",
-        birth_date: profile.data.birth_date ?? "",
-        biological_sex: profile.data.biological_sex ?? "male",
-        goal: profile.data.goal ?? "maintain",
-        activity_multiplier: profile.data.activity_multiplier?.toString() ?? "1.375",
-      });
-    }
-  }, [profile.data]);
-
-  const save = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("user_profile").upsert({
-        user_id: session!.user.id,
-        height_cm: form.height_cm ? Number(form.height_cm) : null,
+  const [validationError, setValidationError] = useState("");
+  const save = useMutation<void, Error, ProfileWrite>({ mutationKey: PROFILE_WRITE_KEY });
+  function saveProfile() {
+    try {
+      if (!session) throw new Error("Sign in to save your targets.");
+      const input = validateProfileWrite({
+        user_id: session.user.id,
+        height_cm: form.height_cm ? finiteNumber(form.height_cm, "Height", true) : null,
+        ...parseTargets(form),
         birth_date: form.birth_date || null,
         biological_sex: form.biological_sex,
         goal: form.goal,
         activity_multiplier: Number(form.activity_multiplier),
         updated_at: new Date().toISOString(),
       });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["user_profile"] });
-      qc.invalidateQueries({ queryKey: ["weekly_balance"] });
-    },
-  });
+      setValidationError("");
+      save.mutate(input);
+    } catch (error) { setValidationError(errorMessage(error)); }
+  }
 
   return (
     <div className="space-y-5">
       <div className="pt-1">
         <h1 className="text-xl font-extrabold tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          These calibrate your calorie target and energy balance.
+          Set your daily food and water targets, and update your profile.
         </p>
       </div>
+
+      <Card className="space-y-4 p-5">
+        <h2 className="font-bold">Daily targets</h2>
+        <p className="text-sm text-muted-foreground">Leave calories blank to use your estimated expenditure. Without enough profile and weight data, the starting target is 2,000 calories. These are editable tracking targets.</p>
+        {([
+          ["calorie_target_override", "Calories (optional)"],
+          ["water_goal_ml", "Water (ml)"],
+          ["fiber_goal_g", "Fiber (g)"],
+          ["protein_pct", "Protein (%)"],
+          ["carbs_pct", "Carbohydrates (%)"],
+          ["fat_pct", "Fat (%)"],
+        ] as const).map(([key, label]) => (
+          <div className="space-y-1.5" key={key}>
+            <Label htmlFor={key}>{label}</Label>
+            <Input id={key} type="number" min="0.1" step="any" value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
+          </div>
+        ))}
+        <p className="text-sm text-muted-foreground">Macro split: {Number(form.protein_pct) + Number(form.carbs_pct) + Number(form.fat_pct)}% of 100%</p>
+      </Card>
 
       <Card className="space-y-4 p-5">
         <div className="space-y-1.5">
@@ -112,7 +122,7 @@ export default function SettingsPage() {
                 className="h-11 w-full justify-between rounded-xl font-normal"
               >
                 {form.birth_date
-                  ? new Date(form.birth_date).toLocaleDateString([], {
+                  ? new Date(`${form.birth_date}T00:00:00`).toLocaleDateString([], {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
@@ -125,8 +135,8 @@ export default function SettingsPage() {
               <Calendar
                 mode="single"
                 captionLayout="dropdown"
-                selected={form.birth_date ? new Date(form.birth_date) : undefined}
-                defaultMonth={form.birth_date ? new Date(form.birth_date) : new Date(1995, 0)}
+                selected={form.birth_date ? new Date(`${form.birth_date}T00:00:00`) : undefined}
+                defaultMonth={form.birth_date ? new Date(`${form.birth_date}T00:00:00`) : new Date(1995, 0)}
                 onSelect={(d) => {
                   setForm({ ...form, birth_date: d ? toISODate(d) : "" });
                   setDateOpen(false);
@@ -151,7 +161,8 @@ export default function SettingsPage() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Goal</Label>
+          <Label>Weight goal</Label>
+          <p className="text-xs text-muted-foreground">Saved to your profile. Set a calorie target above to change your daily budget.</p>
           <Select value={form.goal} onValueChange={(v) => setForm({ ...form, goal: v })}>
             <SelectTrigger className="h-11 w-full rounded-xl">
               <SelectValue />
@@ -181,9 +192,10 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <Button className="h-12 w-full rounded-full" disabled={save.isPending} onClick={() => save.mutate()}>
-        {save.isPending ? "Saving…" : "Save profile"}
+      <Button className="h-12 w-full rounded-full" disabled={save.isPending} onClick={saveProfile}>
+        {save.isPaused ? "Saved on this device · waiting to sync" : save.isPending ? "Saving…" : "Save profile"}
       </Button>
+      {validationError && <p role="alert" className="text-sm text-destructive">{validationError}</p>}
       {save.isSuccess && <p className="text-center text-sm font-medium">Saved ✓</p>}
       {save.isError && <p className="text-sm text-destructive">{errorMessage(save.error)}</p>}
 

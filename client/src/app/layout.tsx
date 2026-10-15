@@ -3,7 +3,7 @@ import { Geist } from "next/font/google";
 import { SerwistProvider } from "@serwist/turbopack/react";
 import "./globals.css";
 import Providers from "@/components/Providers";
-import BottomNav from "@/components/BottomNav";
+import AppShell from "@/components/AppShell";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -39,8 +39,7 @@ export default function RootLayout({
         {/* reloadOnOnline off: TanStack resumes queued mutations on reconnect instead. */}
         <SerwistProvider swUrl="/serwist/sw.js" reloadOnOnline={false}>
           <Providers>
-            <main className="mx-auto w-full max-w-md flex-1 px-4 pt-4 pb-28">{children}</main>
-            <BottomNav />
+            <AppShell>{children}</AppShell>
           </Providers>
         </SerwistProvider>
       </body>

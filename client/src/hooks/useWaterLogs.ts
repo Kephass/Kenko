@@ -1,8 +1,9 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { useSession } from "@/components/Providers";
+import { WATER_MUTATION_KEY, type WaterWrite } from "@/lib/waterMutations";
+import type { Tables } from "@/lib/types";
 import { dayRange, localDateISO } from "@/lib/utils";
 
 export function waterTotal(logs: { amount_ml: number }[] | undefined) {
@@ -15,14 +16,21 @@ export function useWaterForDay(day: string) {
     staleTime: 60_000,
     queryFn: async () => {
       const range = dayRange(day);
-      const { data, error } = await supabase
-        .from("water_logs")
-        .select("*")
-        .gte("logged_at", range.start)
-        .lt("logged_at", range.end)
-        .order("logged_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      const rows: Tables<"water_logs">[] = [];
+      // Fetch every entry before calculating the day's total, with stable ties.
+      for (let offset = 0; ; offset += 500) {
+        const { data, error } = await supabase
+          .from("water_logs")
+          .select("*")
+          .gte("logged_at", range.start)
+          .lt("logged_at", range.end)
+          .order("logged_at", { ascending: false })
+          .order("id", { ascending: false })
+          .range(offset, offset + 499);
+        if (error) throw error;
+        rows.push(...data);
+        if (data.length < 500) return rows;
+      }
     },
   });
 }
@@ -31,16 +39,6 @@ export function useTodayWater() {
   return useWaterForDay(localDateISO());
 }
 
-export function useAddWater() {
-  const qc = useQueryClient();
-  const session = useSession();
-  return useMutation({
-    mutationFn: async (amount_ml: number) => {
-      const { error } = await supabase
-        .from("water_logs")
-        .insert({ user_id: session!.user.id, amount_ml });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["water_logs"] }),
-  });
+export function useWriteWater() {
+  return useMutation<void, Error, WaterWrite>({ mutationKey: WATER_MUTATION_KEY });
 }

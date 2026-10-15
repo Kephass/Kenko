@@ -2,9 +2,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import type { Completeness } from "@/lib/nutritionCompleteness";
 import { useSession } from "@/components/Providers";
 
-export type DailySummary = {
+export type DailySummary = Completeness & {
   day: string;
   calories: number;
   protein_g: number;
@@ -18,11 +19,11 @@ export type DailySummary = {
 export function useDailySummary(start: string, end: string) {
   const session = useSession();
   return useQuery({
-    queryKey: ["daily_summary", start, end],
+    queryKey: ["daily_summary", "v2", start, end],
     enabled: !!session,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("daily_nutrition_summary", {
+      const { data, error } = await supabase.rpc("daily_nutrition_summary_v2", {
         p_user_id: session!.user.id,
         p_start: start,
         p_end: end,

@@ -23,3 +23,6 @@ supabase/.branches/
 # misc
 .DS_Store
 *.log
+
+# claude code runtime
+.claude/scheduled_tasks.lock

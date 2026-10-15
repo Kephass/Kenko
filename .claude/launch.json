@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kenko-client",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["-C", "client", "dev"],
+      "port": 3000
+    }
+  ]
+}

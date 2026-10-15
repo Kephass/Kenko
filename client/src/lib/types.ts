@@ -110,6 +110,30 @@ export type Database = {
           },
         ]
       }
+      daily_target_snapshots: {
+        Row: {
+          day: string
+          goals: Json
+          id: string
+          observed_at: string
+          user_id: string
+        }
+        Insert: {
+          day: string
+          goals: Json
+          id: string
+          observed_at: string
+          user_id: string
+        }
+        Update: {
+          day?: string
+          goals?: Json
+          id?: string
+          observed_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dish_calibration: {
         Row: {
           correction_multiplier: number
@@ -190,16 +214,18 @@ export type Database = {
       dishes: {
         Row: {
           calories_per_100g: number
-          carbs_g_per_100g: number
+          carbs_g_per_100g: number | null
           created_at: string
           embedding: string | null
-          fat_g_per_100g: number
+          fat_g_per_100g: number | null
           fiber_g_per_100g: number | null
           id: string
+          is_favorite: boolean
           name: string
           name_local: string | null
           notes: string | null
-          protein_g_per_100g: number
+          protein_g_per_100g: number | null
+          recipe_details: Json | null
           reference_serving_g: number | null
           source: string
           updated_at: string
@@ -207,16 +233,18 @@ export type Database = {
         }
         Insert: {
           calories_per_100g: number
-          carbs_g_per_100g?: number
+          carbs_g_per_100g?: number | null
           created_at?: string
           embedding?: string | null
-          fat_g_per_100g?: number
+          fat_g_per_100g?: number | null
           fiber_g_per_100g?: number | null
           id?: string
+          is_favorite?: boolean
           name: string
           name_local?: string | null
           notes?: string | null
-          protein_g_per_100g?: number
+          protein_g_per_100g?: number | null
+          recipe_details?: Json | null
           reference_serving_g?: number | null
           source?: string
           updated_at?: string
@@ -224,16 +252,18 @@ export type Database = {
         }
         Update: {
           calories_per_100g?: number
-          carbs_g_per_100g?: number
+          carbs_g_per_100g?: number | null
           created_at?: string
           embedding?: string | null
-          fat_g_per_100g?: number
+          fat_g_per_100g?: number | null
           fiber_g_per_100g?: number | null
           id?: string
+          is_favorite?: boolean
           name?: string
           name_local?: string | null
           notes?: string | null
-          protein_g_per_100g?: number
+          protein_g_per_100g?: number | null
+          recipe_details?: Json | null
           reference_serving_g?: number | null
           source?: string
           updated_at?: string
@@ -284,6 +314,7 @@ export type Database = {
           id: string
           logged_at: string
           match_confidence: number | null
+          meal_type: string
           photo_url: string | null
           portion_ratio: number | null
           protein_g: number | null
@@ -303,6 +334,7 @@ export type Database = {
           id?: string
           logged_at?: string
           match_confidence?: number | null
+          meal_type?: string
           photo_url?: string | null
           portion_ratio?: number | null
           protein_g?: number | null
@@ -322,6 +354,7 @@ export type Database = {
           id?: string
           logged_at?: string
           match_confidence?: number | null
+          meal_type?: string
           photo_url?: string | null
           portion_ratio?: number | null
           protein_g?: number | null
@@ -373,33 +406,78 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_meals: {
+        Row: {
+          created_at: string
+          foods: Json
+          id: string
+          meal_type: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          foods: Json
+          id?: string
+          meal_type: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          foods?: Json
+          id?: string
+          meal_type?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profile: {
         Row: {
           activity_multiplier: number
           biological_sex: string | null
           birth_date: string | null
+          calorie_target_override: number | null
+          carbs_pct: number
+          fat_pct: number
+          fiber_goal_g: number
           goal: string | null
           height_cm: number | null
+          protein_pct: number
           updated_at: string
           user_id: string
+          water_goal_ml: number
         }
         Insert: {
           activity_multiplier?: number
           biological_sex?: string | null
           birth_date?: string | null
+          calorie_target_override?: number | null
+          carbs_pct?: number
+          fat_pct?: number
+          fiber_goal_g?: number
           goal?: string | null
           height_cm?: number | null
+          protein_pct?: number
           updated_at?: string
           user_id: string
+          water_goal_ml?: number
         }
         Update: {
           activity_multiplier?: number
           biological_sex?: string | null
           birth_date?: string | null
+          calorie_target_override?: number | null
+          carbs_pct?: number
+          fat_pct?: number
+          fiber_goal_g?: number
           goal?: string | null
           height_cm?: number | null
+          protein_pct?: number
           updated_at?: string
           user_id?: string
+          water_goal_ml?: number
         }
         Relationships: []
       }
@@ -453,6 +531,24 @@ export type Database = {
           amount_ml?: number
           id?: string
           logged_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      water_preferences: {
+        Row: {
+          preferences: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          preferences: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          preferences?: Json
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -516,6 +612,41 @@ export type Database = {
           protein_g: number
         }[]
       }
+      daily_nutrition_summary_v2: {
+        Args: {
+          p_end: string
+          p_start: string
+          p_tz?: string
+          p_user_id: string
+        }
+        Returns: {
+          calories: number
+          carbs_g: number
+          day: string
+          fat_g: number
+          fiber_g: number
+          incomplete_meal_count: number
+          meal_count: number
+          missing_carbs_count: number
+          missing_fat_count: number
+          missing_fiber_count: number
+          missing_protein_count: number
+          protein_g: number
+        }[]
+      }
+      daily_water_summary: {
+        Args: {
+          p_end: string
+          p_start: string
+          p_tz?: string
+          p_user_id: string
+        }
+        Returns: {
+          amount_ml: number
+          day: string
+          entry_count: number
+        }[]
+      }
       estimate_body_fat_navy: {
         Args: {
           height_cm: number
@@ -577,12 +708,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -606,11 +737,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -631,11 +762,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -656,11 +787,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -673,11 +804,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

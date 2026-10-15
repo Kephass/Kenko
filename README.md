@@ -1,5 +1,23 @@
 # Kenko
 
+> Current development status: the client is implemented. See [ROADMAP.md](./ROADMAP.md)
+> for the food-and-water priorities and the current release gate; older overview
+> documents below describe the original architecture and may understate progress.
+
+## Client development
+
+From `client/`, install the locked dependencies and run `pnpm dev`.
+Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+inside `client/.env.local`. Keep service-role keys out of the client.
+Run `pnpm test`, `pnpm lint`, and `pnpm build` before release.
+
+The food/water update includes one additive database migration. Apply it before
+using favorites, meal categories or custom goals. Run the SQL checks in
+`supabase/tests/food_water_goals.sql` against a development database after migration.
+Password recovery needs `/reset-password` and email confirmation needs `/login`
+on the Supabase Auth redirect allowlist for each app origin.
+
+
 A personal nutrition and body-tracking app built for people whose food isn't
 in the databases the big apps use. It started as a DIY WeightWatchers
 alternative for Ghanaian and Angolan cuisine, and the underlying approach -

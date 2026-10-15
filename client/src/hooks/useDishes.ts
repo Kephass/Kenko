@@ -1,6 +1,9 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, type MutateOptions } from "@tanstack/react-query";
+import { DISH_WRITE_KEY, type DishInput, type DishWrite } from "@/lib/dishMutations";
+export type { DishInput } from "@/lib/dishMutations";
+import type { Tables } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
 import { useSession } from "@/components/Providers";
 
@@ -9,58 +12,31 @@ export function useDishes() {
     queryKey: ["dishes"],
     staleTime: 10 * 60_000,
     queryFn: async () => {
-      const { data, error } = await supabase.from("dishes").select("*").order("name");
-      if (error) throw error;
-      return data;
+      const rows: Tables<"dishes">[] = [];
+      for (let offset = 0; ; offset += 500) {
+        const { data, error } = await supabase.from("dishes").select("*").order("name").order("id").range(offset, offset + 499);
+        if (error) throw error;
+        rows.push(...data);
+        if (data.length < 500) return rows;
+      }
     },
   });
 }
 
-export type DishInput = {
-  name: string;
-  calories_per_100g: number;
-  protein_g_per_100g?: number;
-  carbs_g_per_100g?: number;
-  fat_g_per_100g?: number;
-  fiber_g_per_100g?: number;
-  reference_serving_g?: number;
-};
 
-export function useAddDish() {
-  const qc = useQueryClient();
+function useDishWrite<T>(operation: DishWrite["operation"], unpack: (value: T) => { id: string; edits: Partial<DishInput> }) {
   const session = useSession();
-  return useMutation({
-    mutationFn: async (dish: DishInput) => {
-      const { error } = await supabase
-        .from("dishes")
-        .insert({ user_id: session!.user.id, ...dish });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["dishes"] }),
-  });
+  const mutation = useMutation<void, Error, DishWrite>({ mutationKey: DISH_WRITE_KEY });
+  return { ...mutation, mutate: (value: T, options?: MutateOptions<void, Error, DishWrite>) => {
+    mutation.mutate({ operation, user_id: session?.user.id ?? "", created_at: new Date().toISOString(), ...unpack(value) }, options);
+  } };
 }
-
+export function useAddDish() {
+  return useDishWrite("add", (edits: DishInput) => ({ id: crypto.randomUUID(), edits }));
+}
 export function useUpdateDish() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: { id: string; edits: Partial<DishInput> }) => {
-      const { error } = await supabase.from("dishes").update(input.edits).eq("id", input.id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["dishes"] }),
-  });
+  return useDishWrite("update", (input: { id: string; edits: Partial<DishInput> }) => input);
 }
-
 export function useDeleteDish() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("dishes").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["dishes"] });
-      qc.invalidateQueries({ queryKey: ["meal_logs"] });
-    },
-  });
+  return useDishWrite("delete", (id: string) => ({ id, edits: {} }));
 }
