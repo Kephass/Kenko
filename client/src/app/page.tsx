@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ProgressRing from "@/components/ProgressRing";
 import MacroInputs from "@/components/MacroInputs";
+import { smartFoodPoints, dayPoints, pointsBudget, mealPoints } from "@/lib/points";
 import WeekStrip, { weekStripDays } from "@/components/WeekStrip";
 import CopyMeal from "@/components/CopyMeal";
 import EmptyState from "@/components/EmptyState";
@@ -94,7 +95,7 @@ function MealCard({
           </span>
           <div>
             <p className="text-sm font-semibold">{meal.raw_text_input || "Meal"}</p>
-            <p className="text-sm tabular-nums">{Math.round(Number(meal.calories))} calories</p>
+            <p className="text-sm tabular-nums">{Math.round(Number(meal.calories))} calories · {mealPoints(meal)} pts</p>
             <p className="text-xs text-muted-foreground tabular-nums">
               Protein {formatNutrient(meal.protein_g)} · Carbs {formatNutrient(meal.carbs_g)} · Fat {formatNutrient(meal.fat_g)}
             </p>
@@ -139,7 +140,8 @@ function MealCard({
           disabled={update.isPending}
           onClick={() => {
             try {
-              const edits = { ...nutritionInput(current), raw_text_input: current.name.trim() || null, logged_at: logTimestamp(current.when), meal_type: current.meal_type };
+              const nutrition = nutritionInput(current);
+              const edits = { ...nutrition, points: smartFoodPoints(nutrition), raw_text_input: current.name.trim() || null, logged_at: logTimestamp(current.when), meal_type: current.meal_type };
               setError("");
               update.mutate({ row: meal, edits }, { onSuccess: () => { setEditing(false); setValues(null); } });
               if (!onlineManager.isOnline()) { setEditing(false); setValues(null); }
@@ -222,6 +224,9 @@ function Diary({ initialDay }: { initialDay: string }) {
   const recordedGoals = targetHistory.forDay(selectedDay);
   const goals = recordedGoals ?? targetHistory.current;
   const caloriesLeft = Math.round(goals.calorieTarget - eaten.calories);
+  const eatenPoints = dayPoints(confirmed);
+  const pointsTarget = pointsBudget(goals.calorieTarget);
+  const pointsLeft = pointsTarget - eatenPoints;
   const totalsPending = meals.isPending || profile.isPending || balance.isPending || (!isToday && targetHistory.isPending);
   const totalsFailed = meals.isError || profile.isError || balance.isError || (!isToday && targetHistory.isError);
   const totalsAvailable = !totalsPending && !totalsFailed;
@@ -268,6 +273,17 @@ function Diary({ initialDay }: { initialDay: string }) {
           <span className="flex size-12 items-center justify-center rounded-full bg-muted">
             <Flame className="size-5" />
           </span>
+        </ProgressRing>
+      </Card>
+
+      <Card className="flex-row items-center justify-between p-6">
+        <div>
+          <p className="text-5xl font-extrabold tabular-nums">{Math.abs(pointsLeft)}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{pointsLeft >= 0 ? "Points left" : "Points over"}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{eatenPoints} of {pointsTarget} used · fruit & veg are 0</p>
+        </div>
+        <ProgressRing value={pointsTarget ? eatenPoints / pointsTarget : 0} size={96} stroke={9}>
+          <span className="flex size-12 items-center justify-center rounded-full bg-muted text-lg font-extrabold tabular-nums">{Math.max(0, pointsLeft)}</span>
         </ProgressRing>
       </Card>
 

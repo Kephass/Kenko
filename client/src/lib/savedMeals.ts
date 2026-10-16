@@ -3,6 +3,7 @@ import type { Tables } from "./types";
 import { supabase } from "./supabase";
 import { finiteNumber, MEAL_TYPES, repeatNutrition, nutritionInput, type MealType } from "./tracking";
 import { makeMealCopy } from "./copyMeal";
+import { smartFoodPoints } from "./points";
 export type SavedFood = { name: string; calories: number; protein_g: number | null; carbs_g: number | null; fat_g: number | null; fiber_g: number | null };
 export type SavedMeal = Tables<"saved_meals">;
 export type SavedMealWrite = { operation: "add" | "update" | "delete"; row: SavedMeal };
@@ -46,7 +47,7 @@ export function savedMealPreview(value: unknown, multiplier: string) {
 export function logSavedMeal(row: SavedMeal, userId: string, multiplier: string, when: string, type: MealType) {
   if (row.user_id !== userId) throw new Error("This saved meal belongs to another account.");
   const rows: Tables<"meal_logs">[] = savedMealPreview(row.foods, multiplier).foods.map((food, index) => ({
-    id: String(index), user_id: userId, raw_text_input: food.name, calories: food.calories, protein_g: food.protein_g, carbs_g: food.carbs_g, fat_g: food.fat_g, fiber_g: food.fiber_g,
+    id: String(index), user_id: userId, raw_text_input: food.name, calories: food.calories, protein_g: food.protein_g, carbs_g: food.carbs_g, fat_g: food.fat_g, fiber_g: food.fiber_g, points: smartFoodPoints(food),
     created_at: row.created_at, logged_at: row.created_at, meal_type: type, confirmed: true, source: "manual",
     dish_id: null, dishware_id: null, portion_ratio: null, photo_url: null, match_confidence: null,
   }));

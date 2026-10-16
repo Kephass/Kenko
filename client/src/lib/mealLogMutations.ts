@@ -2,7 +2,14 @@ import type { QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import type { Tables } from "@/lib/types";
 import { finiteNumber } from "./tracking";
+import { smartFoodPoints } from "./points";
 import { localDateISO } from "@/lib/utils";
+
+// Default points from macros when a caller doesn't set them. Zero-point foods
+// (fruit, non-starchy veg) pass points: 0 explicitly and are preserved by ??.
+function withPoints<T extends { points?: number | null; calories: number }>(input: T): T & { points: number } {
+  return { ...input, points: input.points ?? smartFoodPoints(input) };
+}
 
 export type ManualMealInput = {
   /** Client-generated so a re-resumed offline mutation can't insert twice. */
@@ -17,6 +24,7 @@ export type ManualMealInput = {
   protein_g?: number | null;
   carbs_g?: number | null;
   fat_g?: number | null;
+  points?: number | null;
   raw_text_input?: string;
 };
 
@@ -30,13 +38,13 @@ async function addManualMealLog(input: ManualMealInput) {
   const { data } = await supabase.auth.getSession();
   if (!data.session || input.user_id !== data.session.user.id) throw new Error("Sign in to the account that created this meal to sync it.");
   finiteNumber(input.calories, "Calories");
-  for (const value of [input.protein_g, input.carbs_g, input.fat_g, input.fiber_g]) if (value != null) finiteNumber(value, "Nutrients");
+  for (const value of [input.protein_g, input.carbs_g, input.fat_g, input.fiber_g, input.points]) if (value != null) finiteNumber(value, "Nutrients");
   if (!input.logged_at || !Number.isFinite(new Date(input.logged_at).getTime())) throw new Error("Meal date is missing or invalid.");
   // ignoreDuplicates makes replays (persisted queue restored twice) a no-op.
   const { error } = await supabase
     .from("meal_logs")
     .upsert(
-      { ...input, user_id: data.session.user.id, source: "manual", confirmed: true },
+      { ...withPoints(input), user_id: data.session.user.id, source: "manual", confirmed: true },
       { onConflict: "id", ignoreDuplicates: true },
     );
   if (error) throw error;
@@ -72,6 +80,7 @@ export function registerMealLogMutationDefaults(qc: QueryClient) {
         protein_g: input.protein_g ?? null,
         carbs_g: input.carbs_g ?? null,
         fat_g: input.fat_g ?? null,
+        points: input.points ?? smartFoodPoints(input),
         raw_text_input: input.raw_text_input ?? null,
       } as MealLogRow;
       qc.setQueryData<MealLogRow[]>(queryKey, (old) => [optimistic, ...(old ?? []).filter((row) => row.id !== input.id)].sort((a, b) => b.logged_at.localeCompare(a.logged_at)));
@@ -93,7 +102,7 @@ export function registerMealLogMutationDefaults(qc: QueryClient) {
 export const UPDATE_MEAL_KEY = ["meal_logs", "update"] as const;
 export const RESTORE_MEAL_KEY = ["meal_logs", "restore"] as const;
 export const DELETE_MEAL_KEY = ["meal_logs", "delete"] as const;
-export type MealEdits = Partial<Pick<MealLogRow, "calories" | "protein_g" | "carbs_g" | "fat_g" | "fiber_g" | "logged_at" | "raw_text_input" | "meal_type">>;
+export type MealEdits = Partial<Pick<MealLogRow, "calories" | "protein_g" | "carbs_g" | "fat_g" | "fiber_g" | "points" | "logged_at" | "raw_text_input" | "meal_type">>;
 export type MealUpdate = { row: MealLogRow; edits: MealEdits };
 type Correction = { row: MealLogRow; edits?: MealEdits };
 type CorrectionContext = { snapshots: { key: readonly unknown[]; previous?: MealLogRow }[] };
@@ -122,7 +131,7 @@ function registerMealCorrectionDefaults(qc: QueryClient) {
         }
         // Pick fields explicitly: persisted input cannot alter owner, id or source.
         const patch: MealEdits = {};
-        for (const key of ["calories", "protein_g", "carbs_g", "fat_g", "fiber_g"] as const) {
+        for (const key of ["calories", "protein_g", "carbs_g", "fat_g", "fiber_g", "points"] as const) {
           if (edits[key] !== undefined) {
             if (edits[key] != null) finiteNumber(edits[key]!, "Nutrition");
             Object.assign(patch, { [key]: edits[key] });

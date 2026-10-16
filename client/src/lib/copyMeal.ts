@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import type { Tables } from "./types";
 import { supabase } from "./supabase";
 import { finiteNumber, logTimestamp, type MealType } from "./tracking";
+import { smartFoodPoints } from "./points";
 import { localDateISO } from "./utils";
 
 type Meal = Tables<"meal_logs">;
@@ -33,7 +34,7 @@ export function registerMealCopyDefaults(qc: QueryClient) {
       validateCopy(input);
       const { data } = await supabase.auth.getSession();
       if (data.session?.user.id !== input.user_id) throw new Error("Sign in to the account that copied this meal to sync it.");
-      const rows = input.rows.map(row => ({ id: row.id, user_id: input.user_id, logged_at: row.logged_at, meal_type: row.meal_type, raw_text_input: row.raw_text_input, dish_id: row.dish_id, portion_ratio: row.portion_ratio, calories: row.calories, protein_g: row.protein_g, carbs_g: row.carbs_g, fat_g: row.fat_g, fiber_g: row.fiber_g, source: "manual", confirmed: true }));
+      const rows = input.rows.map(row => ({ id: row.id, user_id: input.user_id, logged_at: row.logged_at, meal_type: row.meal_type, raw_text_input: row.raw_text_input, dish_id: row.dish_id, portion_ratio: row.portion_ratio, calories: row.calories, protein_g: row.protein_g, carbs_g: row.carbs_g, fat_g: row.fat_g, fiber_g: row.fiber_g, points: row.points ?? smartFoodPoints(row), source: "manual", confirmed: true }));
       const { error } = await supabase.from("meal_logs").upsert(rows, { onConflict: "id", ignoreDuplicates: true });
       if (error) throw error;
     },

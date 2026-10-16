@@ -2,6 +2,7 @@ import type { Tables } from "./types";
 import type { DishInput } from "./dishMutations";
 import { finiteNumber, nutritionInput, repeatNutrition, localDateTime, type MealType } from "./tracking";
 import { makeMealCopy } from "./copyMeal";
+import { smartFoodPoints, isZeroPointFood } from "./points";
 import { saveMealSnapshot, type SavedFood } from "./savedMeals";
 export type CatalogFood = { id: string; name: string; category: string; nutrition: { calories: number; protein: number | null; carbs: number | null; fat: number | null; fiber: number | null }; portions: { label: string; grams: number }[]; estimated: boolean; recipe?: string };
 export const PREPARATIONS = ["Raw", "Cooked", "Canned", "Dried", "Frozen"] as const;
@@ -72,14 +73,20 @@ export function basketFoodName(item: BasketPortion) {
 export function catalogMeal(items: BasketPortion[], userId: string, when: string, mealType: MealType) {
   if (!userId) throw new Error("Sign in to log a meal.");
   if (!items.length || items.length > 100) throw new Error("Choose between 1 and 100 foods.");
-  const rows = items.map(item => ({
-    id: item.id, user_id: userId,
-    raw_text_input: basketFoodName(item),
-    ...nutritionInput(basketNutrition(item)),
-    created_at: new Date().toISOString(), logged_at: when, meal_type: mealType,
-    confirmed: true, source: "manual", dish_id: null, dishware_id: null,
-    portion_ratio: null, photo_url: null, match_confidence: null,
-  }));
+  const rows = items.map(item => {
+    const nutrition = nutritionInput(basketNutrition(item));
+    // Whole fruit and non-starchy veg from the catalog are zero-point.
+    const zeroPoint = !("quick" in item) && isZeroPointFood(item.food);
+    return {
+      id: item.id, user_id: userId,
+      raw_text_input: basketFoodName(item),
+      ...nutrition,
+      points: zeroPoint ? 0 : smartFoodPoints(nutrition),
+      created_at: new Date().toISOString(), logged_at: when, meal_type: mealType,
+      confirmed: true, source: "manual", dish_id: null, dishware_id: null,
+      portion_ratio: null, photo_url: null, match_confidence: null,
+    };
+  });
   return makeMealCopy(rows, userId, when, mealType);
 }
 

@@ -12,6 +12,7 @@ import { registerSavedMealDefaults, SAVED_MEAL_KEY, saveMealSnapshot, logSavedMe
 import { registerWaterPreferenceDefaults, WATER_PREFERENCES_KEY, waterPreferenceQueryKey, latestWaterPreferences } from '../src/lib/waterPreferenceMutations.ts';
 import { targetsOnDay, validateGoals, registerTargetSnapshotDefaults, TARGET_SNAPSHOT_KEY } from '../src/lib/targetSnapshots.ts';
 import { registerProfileDefaults, PROFILE_WRITE_KEY, validateProfileWrite, mergeProfile } from '../src/lib/profileMutations.ts';
+import { smartFoodPoints, pointsBudget, isZeroPointFood, mealPoints, dayPoints } from '../src/lib/points.ts';
 import { database } from './supabase.mock.mjs';
 
 let qc;
@@ -929,4 +930,44 @@ test('measured and repeated food labels preserve the logged quantity independent
   assert.equal(repeatedFoodName('Rice bowl', '1'), 'Rice bowl');
   for (const value of ['', '0', '-1', 'Infinity']) assert.throws(() => repeatedFoodName('Rice', value));
   assert.throws(() => measuredFoodName('Rice', NaN));
+});
+
+test('smart points reward protein and fiber and penalise fat, never going negative', () => {
+  // 330 cal / 33 = 10 energy points, before adjustments.
+  assert.equal(smartFoodPoints({ calories: 330 }), 10);
+  // Protein credit: 330 cal, 60 g protein -> 10 - min(60,60)*0.1 = 4.
+  assert.equal(smartFoodPoints({ calories: 330, protein_g: 60 }), 4);
+  // Fat penalty: 330 cal, 20 g fat -> 10 + 20*0.25 = 15.
+  assert.equal(smartFoodPoints({ calories: 330, fat_g: 20 }), 15);
+  // Fiber credit is capped at 15 g: 330 cal, 40 g fiber -> 10 - 15*0.15 = 7.75 -> 8.
+  assert.equal(smartFoodPoints({ calories: 330, fiber_g: 40 }), 8);
+  // Lean, high-protein food can floor at zero, never negative.
+  assert.equal(smartFoodPoints({ calories: 60, protein_g: 30 }), 0);
+  // Missing/negative nutrients are treated as zero contribution.
+  assert.equal(smartFoodPoints({ calories: 330, protein_g: null, fat_g: -5 }), 10);
+});
+
+test('daily points budget tracks the calorie target', () => {
+  assert.equal(pointsBudget(2000), 61);
+  assert.equal(pointsBudget(1650), 50);
+  assert.equal(pointsBudget(0), 0);
+  assert.equal(pointsBudget(-100), 0);
+});
+
+test('whole fruit and non-starchy vegetables are zero-point; starchy staples and juices are not', () => {
+  assert.equal(isZeroPointFood({ category: 'Fruits', name: 'Banana, raw' }), true);
+  assert.equal(isZeroPointFood({ category: 'Fruits', name: 'Orange juice, raw' }), false);
+  assert.equal(isZeroPointFood({ category: 'Vegetables', name: 'Broccoli, cooked' }), true);
+  assert.equal(isZeroPointFood({ category: 'Vegetables', name: 'Potato, boiled' }), false);
+  assert.equal(isZeroPointFood({ category: 'Ghanaian', name: 'Jollof rice' }), false);
+  assert.equal(isZeroPointFood({ category: 'Grains', name: 'Rice' }), false);
+});
+
+test('meal points use the stored value when present and fall back to macros otherwise', () => {
+  // Stored zero-point entry stays zero even though its macros would score higher.
+  assert.equal(mealPoints({ calories: 330, points: 0 }), 0);
+  // No stored value: computed from macros.
+  assert.equal(mealPoints({ calories: 330, protein_g: 60, points: null }), 4);
+  // A day mixes stored and computed rows.
+  assert.equal(dayPoints([{ calories: 330, points: 0 }, { calories: 330, points: null }]), 10);
 });

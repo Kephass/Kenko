@@ -316,6 +316,7 @@ export type Database = {
           match_confidence: number | null
           meal_type: string
           photo_url: string | null
+          points: number | null
           portion_ratio: number | null
           protein_g: number | null
           raw_text_input: string | null
@@ -336,6 +337,7 @@ export type Database = {
           match_confidence?: number | null
           meal_type?: string
           photo_url?: string | null
+          points?: number | null
           portion_ratio?: number | null
           protein_g?: number | null
           raw_text_input?: string | null
@@ -356,6 +358,7 @@ export type Database = {
           match_confidence?: number | null
           meal_type?: string
           photo_url?: string | null
+          points?: number | null
           portion_ratio?: number | null
           protein_g?: number | null
           raw_text_input?: string | null
