@@ -971,3 +971,51 @@ test('meal points use the stored value when present and fall back to macros othe
   // A day mixes stored and computed rows.
   assert.equal(dayPoints([{ calories: 330, points: 0 }, { calories: 330, points: null }]), 10);
 });
+
+import { weeklyInsights, achievements, nextAchievement } from '../src/lib/insights.ts';
+
+function series(days) {
+  // days: array of {ago, calories, protein, carbs, fat, fiber, mealCount, goal}
+  return days.map(d => ({ day: isoAgo('2026-10-16', d.ago), calories: d.calories ?? 0, protein: d.protein ?? 0, carbs: d.carbs ?? 0, fat: d.fat ?? 0, fiber: d.fiber ?? 0, mealCount: d.mealCount ?? 0, goal: d.goal ?? null }));
+}
+function isoAgo(iso, n) { const d = new Date(`${iso}T12:00:00`); d.setDate(d.getDate() - n); const p = x => String(x).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+
+test('weekly insights average only logged days and compare against the daily goal', () => {
+  const data = series([
+    { ago: 0, calories: 1800, protein: 100, carbs: 180, fat: 60, fiber: 30, mealCount: 3, goal: 2000 },
+    { ago: 1, calories: 2200, protein: 120, carbs: 220, fat: 70, fiber: 20, mealCount: 2, goal: 2000 },
+    { ago: 2, calories: 0, mealCount: 0, goal: 2000 }, // skipped day, excluded from the average
+    { ago: 10, calories: 5000, protein: 1, carbs: 1, fat: 1, fiber: 1, mealCount: 1, goal: 2000 }, // outside the week
+  ]);
+  const insight = weeklyInsights(data, { [isoAgo('2026-10-16', 0)]: 2000, [isoAgo('2026-10-16', 1)]: 1500 }, '2026-10-16');
+  assert.equal(insight.loggedDays, 2);
+  assert.equal(insight.avgCalories, 2000); // (1800+2200)/2, the skipped and out-of-week days excluded
+  assert.equal(insight.avgGoal, 2000);
+  assert.equal(insight.vsTarget, 0);
+  assert.equal(insight.totalWaterMl, 3500);
+  assert.ok(insight.macroSplit && insight.macroSplit.protein + insight.macroSplit.carbs + insight.macroSplit.fat >= 99);
+  assert.ok(insight.callouts.some(c => c.includes('2 of 7 days')));
+});
+
+test('weekly insights are empty-safe when nothing is logged', () => {
+  const insight = weeklyInsights(series([{ ago: 0, mealCount: 0, goal: 2000 }]), {}, '2026-10-16');
+  assert.equal(insight.loggedDays, 0);
+  assert.equal(insight.avgCalories, 0);
+  assert.equal(insight.vsTarget, null);
+  assert.equal(insight.macroSplit, null);
+});
+
+test('achievements unlock by streak and track progress to the next milestone', () => {
+  const list = achievements(8, series([]), 25);
+  assert.equal(list.find(a => a.id === 'streak-7').earned, true);
+  assert.equal(list.find(a => a.id === 'streak-14').earned, false);
+  assert.deepEqual(list.find(a => a.id === 'streak-14').progress, { current: 8, target: 14 });
+  assert.equal(nextAchievement(list).id, 'streak-14');
+});
+
+test('consistency and fiber achievements count qualifying days in the window', () => {
+  const data = series(Array.from({ length: 22 }, (_, i) => ({ ago: i, calories: 1500, fiber: i < 8 ? 30 : 10, mealCount: 1, goal: 2000 })));
+  const list = achievements(0, data, 25);
+  assert.equal(list.find(a => a.id === 'days-20').earned, true); // 22 logged days
+  assert.equal(list.find(a => a.id === 'fiber-7').earned, true); // 8 days at/above the fiber goal
+});

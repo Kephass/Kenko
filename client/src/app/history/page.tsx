@@ -14,6 +14,8 @@ import { MACROS } from "@/lib/macros";
 import { useTargetHistory } from "@/hooks/useTargetHistory";
 import { addDays, errorMessage, formatDate, localDateISO } from "@/lib/utils";
 import { useDailySummary, summaryByDay } from "@/hooks/useDailySummary";
+import { useLogStreak } from "@/hooks/useMealLogs";
+import { weeklyInsights, achievements, nextAchievement } from "@/lib/insights";
 import { useWeighIns } from "@/hooks/useWeighIns";
 import { useWaterSummary } from "@/hooks/useWaterSummary";
 import { useWaterPreferences } from "@/hooks/useWaterPreferences";
@@ -132,6 +134,12 @@ function History({ initialDay }: { initialDay: string }) {
   });
   const hasMeals = series.some((s) => s.mealCount > 0);
 
+  const streak = useLogStreak();
+  const waterMlByDay = Object.fromEntries((water.data ?? []).map((r) => [r.day, Number(r.amount_ml)]));
+  const week = weeklyInsights(series, waterMlByDay, todayIso);
+  const earned = achievements(streak.data ?? 0, series, targets.current.fiber);
+  const upcoming = nextAchievement(earned);
+
   const latestWeight = weighIns.data?.[0];
 
   const measurementGroups = new Map<string, { value_cm: number; logged_at: string }[]>();
@@ -195,6 +203,59 @@ function History({ initialDay }: { initialDay: string }) {
           </div>
         )}
       </Card>
+
+      <section className="space-y-3" aria-labelledby="this-week-title">
+        <h2 id="this-week-title" className="text-lg font-extrabold">This week</h2>
+        <Card className="gap-3 p-4">
+          {week.loggedDays === 0 ? (
+            <p className="text-sm text-muted-foreground">No food logged in the last 7 days yet. Log a meal to start your weekly report.</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-muted p-3">
+                  <p className="text-xs text-muted-foreground">Days logged</p>
+                  <p className="text-2xl font-extrabold tabular-nums">{week.loggedDays}<span className="text-sm font-semibold text-muted-foreground"> / 7</span></p>
+                </div>
+                <div className="rounded-xl bg-muted p-3">
+                  <p className="text-xs text-muted-foreground">Avg calories</p>
+                  <p className="text-2xl font-extrabold tabular-nums">{week.avgCalories}</p>
+                  {week.vsTarget != null && <p className="text-xs text-muted-foreground">{week.vsTarget <= 0 ? `${Math.abs(week.vsTarget)} under target` : `${week.vsTarget} over target`}</p>}
+                </div>
+                {week.macroSplit && (
+                  <div className="rounded-xl bg-muted p-3">
+                    <p className="text-xs text-muted-foreground">Macro split</p>
+                    <p className="text-sm font-semibold tabular-nums">P {week.macroSplit.protein}% · C {week.macroSplit.carbs}% · F {week.macroSplit.fat}%</p>
+                  </div>
+                )}
+                <div className="rounded-xl bg-muted p-3">
+                  <p className="text-xs text-muted-foreground">Water</p>
+                  <p className="text-2xl font-extrabold tabular-nums">{(week.totalWaterMl / 1000).toFixed(1)}<span className="text-sm font-semibold text-muted-foreground"> L</span></p>
+                </div>
+              </div>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                {week.callouts.map((c, i) => <li key={i}>• {c}</li>)}
+              </ul>
+            </>
+          )}
+        </Card>
+      </section>
+
+      <section className="space-y-3" aria-labelledby="achievements-title">
+        <h2 id="achievements-title" className="text-lg font-extrabold">Achievements</h2>
+        {upcoming && <p className="text-sm text-muted-foreground">Next up: <span className="font-semibold text-foreground">{upcoming.title}</span>{upcoming.progress ? ` — ${upcoming.progress.current} / ${upcoming.progress.target}` : ""}</p>}
+        <div className="grid grid-cols-2 gap-3">
+          {earned.map((a) => (
+            <Card key={a.id} className={`gap-1 p-3 ${a.earned ? "ring-1 ring-foreground/15" : "opacity-60"}`}>
+              <div className="flex items-center justify-between">
+                <span className="text-lg">{a.earned ? "🏅" : "🔒"}</span>
+                {a.progress && !a.earned && <span className="text-xs tabular-nums text-muted-foreground">{a.progress.current}/{a.progress.target}</span>}
+              </div>
+              <p className="text-sm font-semibold">{a.title}</p>
+              <p className="text-xs text-muted-foreground">{a.description}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-lg font-extrabold">Last 30 days</h2>
