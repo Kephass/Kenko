@@ -451,6 +451,7 @@ export type Database = {
           updated_at: string
           user_id: string
           water_goal_ml: number
+          weekly_rate_kg: number | null
         }
         Insert: {
           activity_multiplier?: number
@@ -466,6 +467,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           water_goal_ml?: number
+          weekly_rate_kg?: number | null
         }
         Update: {
           activity_multiplier?: number
@@ -481,6 +483,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           water_goal_ml?: number
+          weekly_rate_kg?: number | null
         }
         Relationships: []
       }

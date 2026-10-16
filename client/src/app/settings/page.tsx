@@ -44,6 +44,7 @@ function ProfileForm({ initial }: { initial: Tables<"user_profile"> | null }) {
     birth_date: initial?.birth_date ?? "",
     biological_sex: initial?.biological_sex ?? "male",
     goal: initial?.goal ?? "maintain",
+    weekly_rate_kg: initial?.weekly_rate_kg?.toString() ?? "0.5",
     activity_multiplier: initial?.activity_multiplier?.toString() ?? "1.375",
     calorie_target_override: initial?.calorie_target_override?.toString() ?? "",
     protein_pct: String(initial?.protein_pct ?? 30),
@@ -66,6 +67,7 @@ function ProfileForm({ initial }: { initial: Tables<"user_profile"> | null }) {
         birth_date: form.birth_date || null,
         biological_sex: form.biological_sex,
         goal: form.goal,
+        weekly_rate_kg: form.goal === "maintain" ? null : Number(form.weekly_rate_kg),
         activity_multiplier: Number(form.activity_multiplier),
         updated_at: new Date().toISOString(),
       });
@@ -162,7 +164,7 @@ function ProfileForm({ initial }: { initial: Tables<"user_profile"> | null }) {
         </div>
         <div className="space-y-1.5">
           <Label>Weight goal</Label>
-          <p className="text-xs text-muted-foreground">Saved to your profile. Set a calorie target above to change your daily budget.</p>
+          <p className="text-xs text-muted-foreground">Adjusts your calorie and points budget from your estimated maintenance. A manual calorie target above overrides this.</p>
           <Select value={form.goal} onValueChange={(v) => setForm({ ...form, goal: v })}>
             <SelectTrigger className="h-11 w-full rounded-xl">
               <SelectValue />
@@ -174,6 +176,22 @@ function ProfileForm({ initial }: { initial: Tables<"user_profile"> | null }) {
             </SelectContent>
           </Select>
         </div>
+        {form.goal !== "maintain" && (
+          <div className="space-y-1.5">
+            <Label>Pace ({form.goal === "cut" ? "lose" : "gain"})</Label>
+            <p className="text-xs text-muted-foreground">How fast — a faster pace means a bigger daily calorie and points change.</p>
+            <Select value={form.weekly_rate_kg} onValueChange={(v) => setForm({ ...form, weekly_rate_kg: v })}>
+              <SelectTrigger className="h-11 w-full rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0.25">0.25 kg / week (gentle)</SelectItem>
+                <SelectItem value="0.5">0.5 kg / week (standard)</SelectItem>
+                <SelectItem value="0.75">0.75 kg / week (faster)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label>Activity level (fallback without wearable data)</Label>
           <Select

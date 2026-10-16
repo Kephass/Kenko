@@ -5,12 +5,15 @@
 // vegetables are zero-point.
 import type { Tables } from "./types";
 
-// ~33 kcal per point keeps a 2,000 kcal day near a familiar ~60-point budget.
-export const CAL_PER_POINT = 33;
-// Coefficients are the only tuning knobs; keep them here.
-const FAT_PENALTY = 0.25; // per gram of fat (also our stand-in for saturated fat)
-const PROTEIN_CREDIT = 0.1; // per gram of protein, capped
-const FIBER_CREDIT = 0.15; // per gram of fiber, capped
+// ~40 kcal per point keeps a points-based program's scale: a maintenance day
+// (~2,000 kcal) is ~50 points, and a typical weight-loss target (~1,450 kcal)
+// lands near ~36 — close to a WeightWatchers-style daily allowance.
+export const CAL_PER_POINT = 40;
+// Food quality adjusts the raw energy in calorie-equivalents before dividing, so
+// changing CAL_PER_POINT rescales budget and food points together.
+const FAT_KCAL = 8.25; // per gram of fat (also our stand-in for saturated fat)
+const PROTEIN_KCAL = 3.3; // per gram of protein, credited (capped)
+const FIBER_KCAL = 4.95; // per gram of fiber, credited (capped)
 const PROTEIN_CAP = 60;
 const FIBER_CAP = 15;
 
@@ -26,13 +29,12 @@ const nonNeg = (value: number | null | undefined) => (value != null && value > 0
 
 /** Smart points for one food's absolute nutrition (not per 100 g). Never negative. */
 export function smartFoodPoints(n: FoodNutrition): number {
-  const energy = nonNeg(n.calories) / CAL_PER_POINT;
-  const raw =
-    energy +
-    nonNeg(n.fat_g) * FAT_PENALTY -
-    Math.min(nonNeg(n.protein_g), PROTEIN_CAP) * PROTEIN_CREDIT -
-    Math.min(nonNeg(n.fiber_g), FIBER_CAP) * FIBER_CREDIT;
-  return Math.max(0, Math.round(raw));
+  const adjustedKcal =
+    nonNeg(n.calories) +
+    nonNeg(n.fat_g) * FAT_KCAL -
+    Math.min(nonNeg(n.protein_g), PROTEIN_CAP) * PROTEIN_KCAL -
+    Math.min(nonNeg(n.fiber_g), FIBER_CAP) * FIBER_KCAL;
+  return Math.max(0, Math.round(adjustedKcal / CAL_PER_POINT));
 }
 
 /** Daily points budget from the calorie target. */

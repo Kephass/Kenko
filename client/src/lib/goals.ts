@@ -1,10 +1,25 @@
 import { finiteNumber } from "./tracking";
 import type { Tables } from "./types";
 
+// Energy in one kilogram of body mass; a week's pace spread over 7 days.
+const KCAL_PER_KG = 7700;
+const DEFAULT_RATE_KG = 0.5;
+const MIN_CALORIE_TARGET = 1200;
+
+/** Daily calorie deficit (−) or surplus (+) implied by the weight goal and pace. */
+export function goalDeficitPerDay(goal?: string | null, weeklyRateKg?: number | null) {
+  if (goal !== "cut" && goal !== "bulk") return 0;
+  const rate = weeklyRateKg != null && weeklyRateKg > 0 ? weeklyRateKg : DEFAULT_RATE_KG;
+  const perDay = (rate * KCAL_PER_KG) / 7;
+  return goal === "cut" ? -perDay : perDay;
+}
+
 export function deriveDailyGoals(caloriesOut7d: number | null | undefined, profile?: Partial<Tables<"user_profile">> | null) {
   const maintenance = caloriesOut7d && Number.isFinite(Number(caloriesOut7d)) && caloriesOut7d > 0
     ? Number(caloriesOut7d) / 7 : 2000;
-  const calorieTarget = profile?.calorie_target_override ?? maintenance;
+  // The goal + pace shape the target; an explicit override still wins outright.
+  const goalAdjusted = Math.max(MIN_CALORIE_TARGET, maintenance + goalDeficitPerDay(profile?.goal, profile?.weekly_rate_kg));
+  const calorieTarget = profile?.calorie_target_override ?? goalAdjusted;
   return {
     calorieTarget,
     protein: (calorieTarget * (profile?.protein_pct ?? 30) / 100) / 4,

@@ -933,23 +933,39 @@ test('measured and repeated food labels preserve the logged quantity independent
 });
 
 test('smart points reward protein and fiber and penalise fat, never going negative', () => {
-  // 330 cal / 33 = 10 energy points, before adjustments.
-  assert.equal(smartFoodPoints({ calories: 330 }), 10);
-  // Protein credit: 330 cal, 60 g protein -> 10 - min(60,60)*0.1 = 4.
-  assert.equal(smartFoodPoints({ calories: 330, protein_g: 60 }), 4);
-  // Fat penalty: 330 cal, 20 g fat -> 10 + 20*0.25 = 15.
-  assert.equal(smartFoodPoints({ calories: 330, fat_g: 20 }), 15);
-  // Fiber credit is capped at 15 g: 330 cal, 40 g fiber -> 10 - 15*0.15 = 7.75 -> 8.
-  assert.equal(smartFoodPoints({ calories: 330, fiber_g: 40 }), 8);
+  // 330 cal / 40 = 8.25 -> 8 points, before adjustments.
+  assert.equal(smartFoodPoints({ calories: 330 }), 8);
+  // Protein credit: (330 - 60*3.3) / 40 = 132/40 = 3.3 -> 3.
+  assert.equal(smartFoodPoints({ calories: 330, protein_g: 60 }), 3);
+  // Fat penalty: (330 + 20*8.25) / 40 = 495/40 = 12.375 -> 12.
+  assert.equal(smartFoodPoints({ calories: 330, fat_g: 20 }), 12);
+  // Fiber credit is capped at 15 g: (330 - 15*4.95) / 40 = 255.75/40 = 6.4 -> 6.
+  assert.equal(smartFoodPoints({ calories: 330, fiber_g: 40 }), 6);
   // Lean, high-protein food can floor at zero, never negative.
   assert.equal(smartFoodPoints({ calories: 60, protein_g: 30 }), 0);
-  // Missing/negative nutrients are treated as zero contribution.
-  assert.equal(smartFoodPoints({ calories: 330, protein_g: null, fat_g: -5 }), 10);
+  // Missing/negative nutrients are treated as zero contribution: 330/40 -> 8.
+  assert.equal(smartFoodPoints({ calories: 330, protein_g: null, fat_g: -5 }), 8);
+});
+
+test('weight goal and pace turn maintenance into a calorie deficit or surplus', () => {
+  // Maintenance from a 14,000 kcal/7-day expenditure is 2,000/day.
+  // Lose 0.5 kg/week = 0.5*7700/7 = 550 kcal deficit -> 1,450.
+  assert.equal(deriveDailyGoals(14000, { goal: 'cut', weekly_rate_kg: 0.5 }).calorieTarget, 1450);
+  // Gain 0.25 kg/week = 275 kcal surplus -> 2,275.
+  assert.equal(deriveDailyGoals(14000, { goal: 'bulk', weekly_rate_kg: 0.25 }).calorieTarget, 2275);
+  // Maintain makes no change.
+  assert.equal(deriveDailyGoals(14000, { goal: 'maintain' }).calorieTarget, 2000);
+  // A goal with no stored pace uses the default 0.5 kg/week.
+  assert.equal(deriveDailyGoals(14000, { goal: 'cut' }).calorieTarget, 1450);
+  // An explicit calorie override wins over the goal adjustment.
+  assert.equal(deriveDailyGoals(14000, { goal: 'cut', weekly_rate_kg: 1, calorie_target_override: 1800 }).calorieTarget, 1800);
+  // The target never drops below the 1,200 floor, even with an aggressive cut.
+  assert.equal(deriveDailyGoals(9100, { goal: 'cut', weekly_rate_kg: 1.5 }).calorieTarget, 1200);
 });
 
 test('daily points budget tracks the calorie target', () => {
-  assert.equal(pointsBudget(2000), 61);
-  assert.equal(pointsBudget(1650), 50);
+  assert.equal(pointsBudget(2000), 50);
+  assert.equal(pointsBudget(1450), 36);
   assert.equal(pointsBudget(0), 0);
   assert.equal(pointsBudget(-100), 0);
 });
@@ -967,9 +983,9 @@ test('meal points use the stored value when present and fall back to macros othe
   // Stored zero-point entry stays zero even though its macros would score higher.
   assert.equal(mealPoints({ calories: 330, points: 0 }), 0);
   // No stored value: computed from macros.
-  assert.equal(mealPoints({ calories: 330, protein_g: 60, points: null }), 4);
+  assert.equal(mealPoints({ calories: 330, protein_g: 60, points: null }), 3);
   // A day mixes stored and computed rows.
-  assert.equal(dayPoints([{ calories: 330, points: 0 }, { calories: 330, points: null }]), 10);
+  assert.equal(dayPoints([{ calories: 330, points: 0 }, { calories: 330, points: null }]), 8);
 });
 
 import { weeklyInsights, achievements, nextAchievement } from '../src/lib/insights.ts';
