@@ -1,6 +1,6 @@
 "use client";
 
-export type Ring = { value: number; colorClass: string; label?: string };
+export type Ring = { value: number; colorClass: string; overColorClass?: string; label?: string };
 
 // Concentric progress rings in the Apple Fitness style: each ring is a faint
 // track plus a rounded-cap arc, nested from outer (index 0) to inner.
@@ -25,9 +25,12 @@ export default function ActivityRings({
           const r = center - stroke / 2 - i * (stroke + gap);
           if (r <= 0) return null;
           const circumference = 2 * Math.PI * r;
-          const clamped = Math.max(0, Math.min(1, ring.value));
+          const over = ring.value > 1;
+          // Over budget: fill the whole ring and switch to a warning colour so it
+          // never reads like remaining progress.
+          const clamped = over ? 1 : Math.max(0, ring.value);
           return (
-            <g key={i} className={ring.colorClass}>
+            <g key={i} className={over ? ring.overColorClass ?? "text-destructive" : ring.colorClass}>
               <circle cx={center} cy={center} r={r} fill="none" strokeWidth={stroke} className="stroke-current opacity-15" />
               <circle
                 cx={center}

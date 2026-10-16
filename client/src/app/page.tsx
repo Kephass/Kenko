@@ -265,14 +265,14 @@ function Diary({ initialDay }: { initialDay: string }) {
         <div className="space-y-4">
           <div>
             <p className="flex items-center gap-2 text-4xl font-extrabold tabular-nums">
-              <span className="inline-block size-2.5 rounded-full bg-carbs" aria-hidden />
+              <span className={`inline-block size-2.5 rounded-full ${caloriesLeft >= 0 ? "bg-carbs" : "bg-destructive"}`} aria-hidden />
               {Math.abs(caloriesLeft)}
             </p>
             <p className="mt-0.5 text-sm text-muted-foreground">{caloriesLeft >= 0 ? "Calories left" : "Calories over"}</p>
           </div>
           <div>
             <p className="flex items-center gap-2 text-4xl font-extrabold tabular-nums">
-              <span className="inline-block size-2.5 rounded-full bg-water" aria-hidden />
+              <span className={`inline-block size-2.5 rounded-full ${pointsLeft >= 0 ? "bg-water" : "bg-destructive"}`} aria-hidden />
               {Math.abs(pointsLeft)}
             </p>
             <p className="mt-0.5 text-sm text-muted-foreground">{pointsLeft >= 0 ? "Points left" : "Points over"}</p>
