@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ProgressRing from "@/components/ProgressRing";
+import ActivityRings from "@/components/ActivityRings";
 import MacroInputs from "@/components/MacroInputs";
 import { smartFoodPoints, dayPoints, pointsBudget, mealPoints } from "@/lib/points";
 import WeekStrip, { weekStripDays } from "@/components/WeekStrip";
@@ -261,30 +262,34 @@ function Diary({ initialDay }: { initialDay: string }) {
         {totalsFailed && <Button variant="secondary" onClick={() => { void meals.refetch(); void profile.refetch(); void balance.refetch(); void targetHistory.refetch(); }}>Retry food progress</Button>}
       </Card> : <>
       <Card className="flex-row items-center justify-between p-6">
-        <div>
-          <p className="text-5xl font-extrabold tabular-nums">
-            {Math.abs(caloriesLeft)}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {caloriesLeft >= 0 ? "Calories left" : "Calories over"}
-          </p>
+        <div className="space-y-4">
+          <div>
+            <p className="flex items-center gap-2 text-4xl font-extrabold tabular-nums">
+              <span className="inline-block size-2.5 rounded-full bg-carbs" aria-hidden />
+              {Math.abs(caloriesLeft)}
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground">{caloriesLeft >= 0 ? "Calories left" : "Calories over"}</p>
+          </div>
+          <div>
+            <p className="flex items-center gap-2 text-4xl font-extrabold tabular-nums">
+              <span className="inline-block size-2.5 rounded-full bg-water" aria-hidden />
+              {Math.abs(pointsLeft)}
+            </p>
+            <p className="mt-0.5 text-sm text-muted-foreground">{pointsLeft >= 0 ? "Points left" : "Points over"}</p>
+            <p className="text-xs text-muted-foreground">{eatenPoints} of {pointsTarget} pts · fruit & veg are 0</p>
+          </div>
         </div>
-        <ProgressRing value={eaten.calories / goals.calorieTarget} size={96} stroke={9}>
-          <span className="flex size-12 items-center justify-center rounded-full bg-muted">
-            <Flame className="size-5" />
-          </span>
-        </ProgressRing>
-      </Card>
-
-      <Card className="flex-row items-center justify-between p-6">
-        <div>
-          <p className="text-5xl font-extrabold tabular-nums">{Math.abs(pointsLeft)}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{pointsLeft >= 0 ? "Points left" : "Points over"}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{eatenPoints} of {pointsTarget} used · fruit & veg are 0</p>
-        </div>
-        <ProgressRing value={pointsTarget ? eatenPoints / pointsTarget : 0} size={96} stroke={9}>
-          <span className="flex size-12 items-center justify-center rounded-full bg-muted text-lg font-extrabold tabular-nums">{Math.max(0, pointsLeft)}</span>
-        </ProgressRing>
+        <ActivityRings
+          size={136}
+          stroke={15}
+          gap={5}
+          rings={[
+            { value: eaten.calories / goals.calorieTarget, colorClass: "text-carbs", label: `Calories ${Math.round(eaten.calories)} of ${Math.round(goals.calorieTarget)}` },
+            { value: pointsTarget ? eatenPoints / pointsTarget : 0, colorClass: "text-water", label: `Points ${eatenPoints} of ${pointsTarget}` },
+          ]}
+        >
+          <Flame className="size-5 text-muted-foreground" />
+        </ActivityRings>
       </Card>
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
