@@ -4,10 +4,12 @@ import { Suspense, useState } from "react";
 import { onlineManager } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Flame, Ruler, GlassWater, type LucideIcon } from "lucide-react";
+import { Flame, Ruler, GlassWater, ChevronLeft, ChevronRight, CalendarDays, type LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ProgressRing from "@/components/ProgressRing";
 import ActivityRings from "@/components/ActivityRings";
 import MacroInputs from "@/components/MacroInputs";
@@ -20,7 +22,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useTargetHistory } from "@/hooks/useTargetHistory";
 import { diaryDate, localDateTime, logTimestamp, nutrientInputValue, formatNutrient, hasMissingNutrients, nutritionInput, MEAL_TYPES } from "@/lib/tracking";
 import type { Tables } from "@/lib/types";
-import { errorMessage, formatDate, formatTime, localDateISO } from "@/lib/utils";
+import { addDays, errorMessage, formatDate, formatTime, localDateISO } from "@/lib/utils";
 import { useWeeklyBalance } from "@/hooks/useWeeklyBalance";
 import {
   useDeleteMealLog,
@@ -193,6 +195,11 @@ function Diary({ initialDay }: { initialDay: string }) {
     router.replace(`/?date=${day}`, { scroll: false });
   }
   const isToday = selectedDay === today;
+  const [dateOpen, setDateOpen] = useState(false);
+  const selectedDate = new Date(`${selectedDay}T00:00:00`);
+  const yesterday = localDateISO(addDays(new Date(`${today}T00:00:00`), -1));
+  const dateLabel = selectedDay === today ? "Today" : selectedDay === yesterday ? "Yesterday" : selectedDate.toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" });
+  const stepDay = (delta: number) => setSelectedDay(localDateISO(addDays(selectedDate, delta)));
   const [deletedMeal, setDeletedMeal] = useState<Tables<"meal_logs"> | null>(null);
   const restore = useRestoreMealLog();
 
@@ -252,7 +259,32 @@ function Diary({ initialDay }: { initialDay: string }) {
       </header>
 
       {profile.isSuccess && !profile.data && <Card className="gap-3 p-5"><h2 className="font-bold">Welcome. Start with food and water.</h2><p className="text-sm text-muted-foreground">Choose your daily targets, or log your first entry with the current defaults.</p><Link href="/onboarding" className="font-semibold underline">Set up my targets</Link></Card>}
-      <label className="block space-y-1 text-xs text-muted-foreground">Diary date<input aria-label="Diary date" type="date" max={today} value={selectedDay} onChange={(e) => { if (e.target.value) setSelectedDay(e.target.value); }} className="block h-10 w-full rounded-xl border bg-card px-3 text-sm text-foreground" /></label>
+      <div className="flex items-center gap-2">
+        <Button variant="secondary" size="icon" className="size-10 shrink-0 rounded-full bg-card shadow-soft ring-1 ring-black/[0.04]" onClick={() => stepDay(-1)} aria-label="Previous day">
+          <ChevronLeft className="size-5" />
+        </Button>
+        <Popover open={dateOpen} onOpenChange={setDateOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="secondary" className="h-10 flex-1 justify-center gap-2 rounded-full bg-card font-semibold shadow-soft ring-1 ring-black/[0.04]" aria-label={`Diary date: ${dateLabel}. Open calendar`}>
+              <CalendarDays className="size-4 text-muted-foreground" />
+              {dateLabel}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="center">
+            <Calendar
+              mode="single"
+              required
+              selected={selectedDate}
+              defaultMonth={selectedDate}
+              disabled={{ after: new Date(`${today}T00:00:00`) }}
+              onSelect={(d) => { if (d) setSelectedDay(localDateISO(d)); setDateOpen(false); }}
+            />
+          </PopoverContent>
+        </Popover>
+        <Button variant="secondary" size="icon" disabled={isToday} className="size-10 shrink-0 rounded-full bg-card shadow-soft ring-1 ring-black/[0.04] disabled:opacity-40" onClick={() => stepDay(1)} aria-label="Next day">
+          <ChevronRight className="size-5" />
+        </Button>
+      </div>
       <WeekStrip selected={selectedDay} onSelect={setSelectedDay} ratios={ratios} />
 
       {targetHistory.isError && <p role="alert" className="text-xs text-destructive">Historical targets could not be loaded. Any available cached targets are shown; other comparisons use current targets.</p>}
