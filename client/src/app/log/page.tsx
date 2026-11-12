@@ -1,219 +1,365 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import dynamic from "next/dynamic";
+import { Suspense, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { onlineManager, useIsMutating } from "@tanstack/react-query";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useIsMutating, useMutation } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "motion/react";
+import { Bookmark, Check, Clock, Plus, Search, Star, X, Zap } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAddManualMealLog, useRecentMeals } from "@/hooks/useMealLogs";
-import { useDishes, useUpdateDish } from "@/hooks/useDishes";
-import { useSession } from "@/components/Providers";
 import BackButton from "@/components/BackButton";
-import MacroInputs from "@/components/MacroInputs";
-import { errorMessage, localDateISO } from "@/lib/utils";
-import { diaryDate, measuredFoodName, repeatedFoodName, localDateTime, logTimestamp, repeatNutrition, nutritionInput, portionGrams, portionFromGrams, type PortionUnit, MEAL_TYPES, type MealType } from "@/lib/tracking";
-import { COPY_MEAL_KEY } from "@/lib/copyMeal";
-import { savedDishCatalogFood, quickBasketPortion } from "@/lib/catalog";
 import CatalogBasket from "@/components/CatalogBasket";
+import FoodSheet from "@/components/log/FoodSheet";
+import QuickAddSheet, { type QuickEntry } from "@/components/log/QuickAddSheet";
+import { Chip, Segmented } from "@/components/Chips";
+import { toast } from "@/components/Toaster";
+import { useSession } from "@/components/Providers";
+import { useAddManualMealLog, useDeleteMealLog, useRecentMeals } from "@/hooks/useMealLogs";
+import { useDishes } from "@/hooks/useDishes";
+import { useSavedMeals } from "@/hooks/useSavedMeals";
 import { useCatalogDraft } from "@/hooks/useCatalogDraft";
+import { CATALOG_CATEGORIES, useCatalogFoods } from "@/hooks/useCatalogFoods";
+import { basketTotals, catalogNutrition, quickBasketPortion, savedDishCatalogFood, searchCatalog, type BasketPortion, type CatalogFood } from "@/lib/catalog";
+import { COPY_MEAL_KEY, type MealCopy } from "@/lib/copyMeal";
+import { matchesLibrarySearch } from "@/lib/librarySearch";
+import { MEAL_META, MEAL_OPTIONS } from "@/lib/mealMeta";
+import type { ManualMealInput } from "@/lib/mealLogMutations";
+import { isZeroPointFood } from "@/lib/points";
+import { logSavedMeal, parseSavedFoods, type SavedMeal } from "@/lib/savedMeals";
+import { diaryDate, localDateTime, logTimestamp, measuredFoodName, MEAL_TYPES, nutritionInput, repeatNutrition, type MealType } from "@/lib/tracking";
 import type { Tables } from "@/lib/types";
+import { errorMessage, localDateISO } from "@/lib/utils";
 
-const FoodCatalog = dynamic(() => import("@/components/FoodCatalog"), { loading: () => <p role="status">Loading food catalog…</p> });
+type Meal = Tables<"meal_logs">;
+type Dish = Tables<"dishes">;
+type Open =
+  | { kind: "food"; key: string; food: CatalogFood; dish?: Dish }
+  | { kind: "quick"; key: string; repeat?: Meal; name?: string };
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 export default function LogPage() {
-  return <Suspense fallback={<p role="status">Loading food logger…</p>}><DatedFoodLogger /></Suspense>;
+  return <Suspense fallback={<Skeleton className="h-96 w-full rounded-3xl" />}><DatedFoodLogger /></Suspense>;
 }
 function DatedFoodLogger() {
   const params = useSearchParams();
   const day = diaryDate(params.get("date"), localDateISO());
-  return <FoodLogger key={day} initialDay={day} />;
+  const meal = params.get("meal");
+  return <FoodLogger key={day} initialDay={day} initialMeal={MEAL_TYPES.includes(meal as MealType) ? (meal as MealType) : null} />;
 }
-function FoodLogger({ initialDay }: { initialDay: string }) {
+
+/** One result: tap the row for portions, tap + to log the usual amount now. */
+function Row({ title, subtitle, icon, onOpen, onQuick, quickLabel }: { title: string; subtitle: string; icon?: React.ReactNode; onOpen: () => void; onQuick: () => void; quickLabel: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <motion.li layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25, ease: EASE }} className="flex items-center border-b border-black/[0.05] last:border-0">
+      <button type="button" className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-4 text-left active:opacity-60" onClick={onOpen}>
+        {icon}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold">{title}</span>
+          <span className="block truncate text-xs text-muted-foreground tabular-nums">{subtitle}</span>
+        </span>
+      </button>
+      <button
+        type="button"
+        aria-label={quickLabel}
+        className={`press m-2 flex size-10 shrink-0 items-center justify-center rounded-full transition-colors duration-300 ${done ? "bg-fiber text-white" : "bg-muted text-foreground"}`}
+        onClick={() => { onQuick(); setDone(true); setTimeout(() => setDone(false), 1400); }}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span key={done ? "done" : "add"} initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.4, opacity: 0 }} transition={{ duration: 0.15 }}>
+            {done ? <Check className="size-4.5" strokeWidth={3} /> : <Plus className="size-4.5" strokeWidth={2.4} />}
+          </motion.span>
+        </AnimatePresence>
+      </button>
+    </motion.li>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-2">
+      <h2 className="px-1 text-xs font-bold tracking-wide text-muted-foreground uppercase">{title}</h2>
+      <ul className="overflow-hidden rounded-3xl bg-card shadow-soft ring-1 ring-black/[0.04]">
+        <AnimatePresence initial={false}>{children}</AnimatePresence>
+      </ul>
+    </section>
+  );
+}
+
+function FoodLogger({ initialDay, initialMeal }: { initialDay: string; initialMeal: MealType | null }) {
   const router = useRouter();
   const session = useSession();
   const dishes = useDishes();
   const recent = useRecentMeals();
+  const savedMeals = useSavedMeals();
+  const catalog = useCatalogFoods();
   const add = useAddManualMealLog();
+  const del = useDeleteMealLog();
+  const copy = useMutation<void, Error, MealCopy>({ mutationKey: COPY_MEAL_KEY });
   const basketPending = useIsMutating({ mutationKey: COPY_MEAL_KEY }) > 0;
-  const favorite = useUpdateDish();
   const draft = useCatalogDraft(session?.user.id ?? "", initialDay);
-  const { items: basket, setItems: setBasket, when, setWhen, mealType, setMealType } = draft;
+  const { items: basket, setItems: setBasket, when, setWhen } = draft;
+  const [mealOverride, setMealOverride] = useState(initialMeal);
+  const mealType = mealOverride ?? draft.mealType;
+  const setMealType = (type: MealType) => { setMealOverride(type); draft.setMealType(type); };
+  const mealLabel = MEAL_META[mealType].label;
+
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
-  const [mode, setMode] = useState<"dishes" | "quick" | "recent" | "catalog">("dishes");
-  const [search, setSearch] = useState("");
-  const [dishId, setDishId] = useState("");
-  const [amount, setAmount] = useState("1");
-  const [unit, setUnit] = useState<PortionUnit>("servings");
-  const [repeat, setRepeat] = useState<Tables<"meal_logs"> | null>(null);
-  const [repeatAmount, setRepeatAmount] = useState("1");
-  const [recentSearch, setRecentSearch] = useState("");
-  const [name, setName] = useState("");
-  const [values, setValues] = useState<Record<string, string>>({ calories: "", protein: "", carbs: "", fat: "", fiber: "" });
-  const [error, setError] = useState("");
-  const dish = mode === "dishes" ? dishes.data?.find((d) => d.id === dishId) : undefined;
-  let grams = 0;
-  try { if (dish) grams = portionGrams(amount, unit, dish.reference_serving_g); } catch { /* Form reports invalid portions on submit. */ }
-  const scale = grams / 100;
-  const matching = (dishes.data ?? []).filter((d) => (!favoritesOnly || d.is_favorite) && `${d.name} ${d.name_local ?? ""}`.toLowerCase().includes(search.toLowerCase()));
+  const [limit, setLimit] = useState(20);
+  const [timeOpen, setTimeOpen] = useState(false);
+  const [timeEdited, setTimeEdited] = useState(false);
+  const [sheet, setSheet] = useState<Open | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [basketOpen, setBasketOpen] = useState(false);
+  const show = (next: Open) => { setSheet(next); setSheetOpen(true); };
+  const searching = query.trim().length > 0;
+  const dishName = (meal: Meal) => meal.raw_text_input || dishes.data?.find((d) => d.id === meal.dish_id)?.name || "Meal";
 
-  const matchingRecent = (recent.data ?? []).filter(meal => (meal.raw_text_input || dishes.data?.find(d => d.id === meal.dish_id)?.name || "Meal").toLowerCase().includes(recentSearch.toLowerCase()));
+  // Latest entry per distinct name, so "Recent" reads as a list of usual foods.
+  const recents = useMemo(() => {
+    const seen = new Set<string>();
+    return (recent.data ?? []).filter((meal) => {
+      const key = (meal.raw_text_input ?? meal.dish_id ?? meal.id).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [recent.data]);
+  const matchingRecents = recents.filter((meal) => matchesLibrarySearch(query, dishName(meal))).slice(0, searching ? 5 : 8);
+  const matchingDishes = (dishes.data ?? [])
+    .filter((d) => (!favoritesOnly || d.is_favorite) && matchesLibrarySearch(query, `${d.name} ${d.name_local ?? ""}`))
+    .sort((a, b) => Number(b.is_favorite) - Number(a.is_favorite))
+    .slice(0, searching || favoritesOnly ? 12 : 6);
+  const matchingMeals = searching ? (savedMeals.data ?? []).filter((meal) => matchesLibrarySearch(query, meal.name)).slice(0, 4) : [];
+  const matchingCatalog = useMemo(() => (catalog && (searching || category) ? searchCatalog(catalog, query, category) : []), [catalog, query, category, searching]);
 
-  function reuse(meal: Tables<"meal_logs">) {
-    setName(meal.raw_text_input || dishes.data?.find((d) => d.id === meal.dish_id)?.name || "Meal");
-    setValues(repeatNutrition(meal, "1"));
-    setRepeat(meal); setRepeatAmount("1");
-    setMode("quick"); setError("");
+  let basketCalories: number | null = null;
+  try { basketCalories = basketTotals(basket).calories; } catch { /* Shown as "check amounts" in the sheet. */ }
+
+  function timestamp() {
+    // On today's diary an untouched time means "now", not when the page opened.
+    if (!timeEdited && initialDay === localDateISO()) return new Date().toISOString();
+    return logTimestamp(when);
   }
-
-  function changeRepeat(amount: string) {
-    setRepeatAmount(amount);
-    if (!repeat) return;
-    try { setValues(repeatNutrition(repeat, amount)); setError(""); }
-    catch (e) { setError(errorMessage(e)); }
-  }
-
-  function changeValue(key: string, value: string) {
-    setRepeat(null);
-    setValues(previous => ({ ...previous, [key]: value }));
-  }
-
-  function submit() {
+  function logEntry(input: Omit<ManualMealInput, "id" | "user_id" | "logged_at" | "meal_type">, stay: boolean) {
     try {
-      if (!session) throw new Error("Sign in to log a meal.");
-      if (mode === "dishes" && !dish) throw new Error("Choose a dish or use Quick add.");
-      if (repeat && mode === "quick") repeatNutrition(repeat, repeatAmount);
-      const logged_at = logTimestamp(when);
-      let nutrition;
-      if (dish) {
-        const portion = portionGrams(amount, unit, dish.reference_serving_g);
-        nutrition = {
-          dish_id: dish.id,
-          portion_ratio: portion / (dish.reference_serving_g ?? 100),
-          calories: Number(dish.calories_per_100g) * portion / 100,
-          protein_g: dish.protein_g_per_100g == null ? null : Number(dish.protein_g_per_100g) * portion / 100,
-          carbs_g: dish.carbs_g_per_100g == null ? null : Number(dish.carbs_g_per_100g) * portion / 100,
-          fat_g: dish.fat_g_per_100g == null ? null : Number(dish.fat_g_per_100g) * portion / 100,
-          fiber_g: dish.fiber_g_per_100g == null ? null : Number(dish.fiber_g_per_100g) * portion / 100,
-          raw_text_input: measuredFoodName(dish.name, portion),
-        };
-      } else {
-        if (!name.trim()) throw new Error("Give this food or meal a name.");
-        nutrition = { ...nutritionInput(values), raw_text_input: repeat ? repeatedFoodName(name, repeatAmount) : name.trim() };
-      }
-      setError("");
-      add.mutate({ id: crypto.randomUUID(), user_id: session.user.id, logged_at, meal_type: mealType, ...nutrition }, { onSuccess: () => router.push(`/?date=${when.slice(0, 10)}`) });
-      if (!onlineManager.isOnline()) router.push(`/?date=${when.slice(0, 10)}`);
-    } catch (e) { setError(errorMessage(e)); }
+      if (!session) throw new Error("Sign in to log food.");
+      const row: ManualMealInput = { id: crypto.randomUUID(), user_id: session.user.id, logged_at: timestamp(), meal_type: mealType, ...input };
+      add.mutate(row);
+      toast(`${Math.round(row.calories)} cal added to ${mealLabel}`, { label: "Undo", onClick: () => del.mutate({ row: row as unknown as Meal }) });
+      if (!stay) { setSheetOpen(false); router.push(`/?date=${when.slice(0, 10)}`); }
+    } catch (e) { toast(errorMessage(e)); }
   }
+  function logFood(food: CatalogFood, grams: number, dish: Dish | undefined, stay: boolean) {
+    try {
+      const nutrition = nutritionInput(catalogNutrition(food, grams));
+      logEntry({
+        ...nutrition,
+        raw_text_input: `${measuredFoodName(food.name, grams)}${food.estimated && !dish ? " (estimate)" : ""}`,
+        ...(isZeroPointFood(food) ? { points: 0 } : {}),
+        ...(dish ? { dish_id: dish.id, portion_ratio: grams / Number(dish.reference_serving_g ?? 100) } : {}),
+      }, stay);
+    } catch (e) { toast(errorMessage(e)); }
+  }
+  function logQuick(entry: QuickEntry, stay: boolean) {
+    try { logEntry({ ...nutritionInput(entry.values), raw_text_input: entry.name, ...(entry.points === 0 ? { points: 0 } : {}) }, stay); }
+    catch (e) { toast(errorMessage(e)); }
+  }
+  function logSaved(meal: SavedMeal) {
+    try {
+      if (!session) throw new Error("Sign in to log a saved meal.");
+      const input = logSavedMeal(meal, session.user.id, "1", !timeEdited && initialDay === localDateISO() ? localDateTime() : when, mealType);
+      copy.mutate(input);
+      toast(`${meal.name} added to ${mealLabel}`, { label: "Undo", onClick: () => input.rows.forEach((row) => del.mutate({ row })) });
+    } catch (e) { toast(errorMessage(e)); }
+  }
+  function addToBasket(item: BasketPortion) {
+    setBasket((items) => (items.length < 100 ? [...items, item] : items));
+    setSheetOpen(false);
+    toast("Added to your meal", { label: "Review", onClick: () => setBasketOpen(true) });
+  }
+  const defaultGrams = (food: CatalogFood) => food.portions[0]?.grams ?? 100;
+  const foodSubtitle = (food: CatalogFood) => {
+    const grams = defaultGrams(food);
+    return `${Math.round(food.nutrition.calories * grams / 100)} cal · ${food.portions[0]?.label ?? "100 g"}${food.estimated ? " · estimate" : ""}`;
+  };
+  const savedCalories = (meal: SavedMeal) => {
+    try { return Math.round(parseSavedFoods(meal.foods).reduce((sum, food) => sum + food.calories, 0)); } catch { return 0; }
+  };
+  const whenDate = new Date(when);
+  const timeLabel = `${initialDay === localDateISO() ? "Today" : whenDate.toLocaleDateString([], { day: "numeric", month: "short" })} · ${whenDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
 
   return (
-    <div className="space-y-5">
-      <div className="relative flex items-center justify-center pt-1">
-        <div className="absolute left-0"><BackButton /></div>
-        <h1 className="text-xl font-extrabold tracking-tight">Log food</h1>
+    <div className="space-y-4 pb-24">
+      <div className="flex items-center justify-between pt-1">
+        <BackButton />
+        <h1 className="text-base font-bold">Log food</h1>
+        <button type="button" aria-expanded={timeOpen} aria-label={`Meal time: ${timeLabel}. Change`} className="press flex h-10 items-center gap-1.5 rounded-full bg-card px-3 text-xs font-semibold shadow-soft ring-1 ring-black/[0.04]" onClick={() => setTimeOpen(!timeOpen)}>
+          <Clock className="size-3.5 text-muted-foreground" />
+          {timeLabel}
+        </button>
       </div>
-      <div className="grid grid-cols-2 gap-2" aria-label="Logging method">
-        {([ ["catalog", "Catalog"], ["dishes", "My dishes"], ["quick", "Quick add"], ["recent", "Recent"] ] as const).map(([key, label]) => (
-          <Button key={key} variant={mode === key ? "default" : "secondary"} className="flex-1 rounded-full" aria-pressed={mode === key} onClick={() => { setMode(key); setError(""); }}>{label}</Button>
-        ))}
+      <AnimatePresence initial={false}>
+        {timeOpen && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: EASE }} className="overflow-hidden">
+            <Input className="bg-card shadow-soft" aria-label="When did you eat?" type="datetime-local" max={localDateTime()} value={when} onChange={(e) => { if (e.target.value) { setWhen(e.target.value); setTimeEdited(true); } }} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Segmented label="Meal" options={MEAL_OPTIONS} value={mealType as (typeof MEAL_OPTIONS)[number]["value"]} onChange={setMealType} className="bg-card shadow-soft ring-1 ring-black/[0.04]" />
+
+      <div className="relative">
+        <Search className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          className="h-14 rounded-full bg-card pr-12 pl-12 text-base shadow-soft ring-1 ring-black/[0.04]"
+          aria-label="Search foods, dishes and meals"
+          placeholder="Search jollof, banana, oats…"
+          autoFocus
+          enterKeyHint="search"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setLimit(20); }}
+        />
+        {query && (
+          <button type="button" aria-label="Clear search" className="absolute top-1/2 right-3 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-muted" onClick={() => setQuery("")}>
+            <X className="size-4" />
+          </button>
+        )}
       </div>
-      <Link href={`/meals?date=${when.slice(0, 10)}`} className="block text-center text-sm font-semibold underline">Choose a saved meal</Link>
+
+      <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 py-1">
+        <Chip onClick={() => show({ kind: "quick", key: crypto.randomUUID(), name: query.trim() || undefined })}><Zap className="size-3.5 fill-carbs text-carbs" />Quick add</Chip>
+        <Chip selected={favoritesOnly} onClick={() => setFavoritesOnly(!favoritesOnly)}><Star className={`size-3.5 ${favoritesOnly ? "fill-current" : ""}`} />Favorites</Chip>
+        <Link href={`/meals?date=${initialDay}`} className="press inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 text-sm font-medium shadow-soft ring-1 ring-black/[0.04]"><Bookmark className="size-3.5" />Saved meals</Link>
+        {CATALOG_CATEGORIES.map((name) => <Chip key={name} selected={category === name} onClick={() => { setCategory(category === name ? "" : name); setLimit(20); }}>{name}</Chip>)}
+      </div>
       {draft.error && <p role="alert" className="text-sm text-destructive">{draft.error}</p>}
-      {!!basket.length && <CatalogBasket items={basket} onChange={setBasket} when={when} setWhen={setWhen} mealType={mealType} setMealType={setMealType} />}
-      {mode === "catalog" ? <FoodCatalog basketCount={basket.length} onAdd={(food, grams) => setBasket(items => items.length < 100 ? [...items, { id: crypto.randomUUID(), food, grams: String(grams) }] : items)} onUse={(foodName, nutrition) => { setName(foodName); setValues(nutrition); setRepeat(null); setMode("quick"); setError(""); }} /> : mode === "recent" ? (
-        <section className="space-y-3">
-          <p className="text-sm text-muted-foreground">Reuse a recent entry, then adjust it before logging.</p>
-          <Label htmlFor="recent-search">Search recent food</Label>
-          <Input id="recent-search" type="search" value={recentSearch} placeholder="Food or meal name" onChange={e => setRecentSearch(e.target.value)} />
-          {recent.isLoading && <p role="status">Loading recent food…</p>}
-          {recent.isError && <p role="alert">{errorMessage(recent.error)}</p>}
-          {!recent.isLoading && !recent.isError && !recent.data?.length && <p className="text-sm">Your logged food will appear here.</p>}
-          {!!recent.data?.length && !matchingRecent.length && <p className="text-sm text-muted-foreground">No recent food matches that search.</p>}
-          {matchingRecent.map((meal) => (
-            <button key={meal.id} className="w-full rounded-2xl bg-card p-4 text-left shadow-soft" onClick={() => reuse(meal)}>
-              <span className="block font-semibold">{meal.raw_text_input || dishes.data?.find((d) => d.id === meal.dish_id)?.name || "Meal"}</span>
-              <span className="text-sm text-muted-foreground">{Math.round(Number(meal.calories))} cal · {new Date(meal.logged_at).toLocaleDateString()}</span>
-            </button>
+
+      {!favoritesOnly && !category && matchingRecents.length > 0 && (
+        <Section title={searching ? "From your history" : "Recent"}>
+          {matchingRecents.map((meal) => (
+            <Row
+              key={meal.id}
+              title={dishName(meal)}
+              subtitle={`${Math.round(Number(meal.calories))} cal · ${new Date(meal.logged_at).toLocaleDateString([], { day: "numeric", month: "short" })}`}
+              quickLabel={`Log ${dishName(meal)} again`}
+              onOpen={() => show({ kind: "quick", key: meal.id, repeat: meal, name: dishName(meal) })}
+              onQuick={() => logQuick({ name: dishName(meal), values: repeatNutrition(meal, "1"), points: meal.points }, true)}
+            />
           ))}
-        </section>
-      ) : (
-        <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-          <div className="space-y-1.5">
-            <Label htmlFor="meal-time">When did you eat?</Label>
-            <Input id="meal-time" required type="datetime-local" max={localDateTime()} value={when} onChange={(e) => setWhen(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="meal-type">Meal</Label>
-            <select id="meal-type" className="h-10 w-full rounded-md border px-3 text-sm capitalize" value={mealType} onChange={(e) => setMealType(e.target.value as MealType)}>{MEAL_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}</select>
-          </div>
-          {mode === "dishes" ? (
-            <Card className="gap-4 p-4">
-              <Label htmlFor="dish-search">Search your dishes</Label>
-              <Input id="dish-search" type="search" placeholder="e.g. Jollof rice" value={search} onChange={(e) => setSearch(e.target.value)} />
-              {dishes.isLoading && <p role="status">Loading dishes…</p>}
-              {dishes.isError && <p role="alert">{errorMessage(dishes.error)}</p>}
-              <Button type="button" variant="secondary" aria-pressed={favoritesOnly} onClick={() => setFavoritesOnly(!favoritesOnly)}>{favoritesOnly ? "★ Favorites only" : "Show favorites"}</Button>
-              <div className="max-h-48 space-y-2 overflow-y-auto" aria-label="Saved dishes">
-                {matching.map((d) => <Button type="button" key={d.id} variant={d.id === dishId ? "default" : "secondary"} aria-pressed={d.id === dishId} className="w-full justify-start" onClick={() => { setDishId(d.id); setUnit("servings"); setAmount("1"); }}>{d.name}</Button>)}
-              </div>
-              {!dishes.isLoading && !dishes.isError && !matching.length && <p className="text-sm text-muted-foreground">No matching dishes. <Link className="underline" href="/dishes">Add a dish</Link> or use Quick add.</p>}
-              {dish && <>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold">{dish.name}</p>
-                  <Button type="button" variant="ghost" size="sm" aria-pressed={dish.is_favorite} disabled={favorite.isPending && !favorite.isPaused} onClick={() => favorite.mutate({ id: dish.id, edits: { is_favorite: !dish.is_favorite } })}>{dish.is_favorite ? "★ Favorited" : "☆ Favorite"}</Button>
-                </div>
-                {favorite.isError && <p role="alert" className="text-sm text-destructive">{errorMessage(favorite.error)}</p>}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5"><Label htmlFor="portion">Amount</Label><Input id="portion" required type="number" min="0.01" step="any" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
-                  <div className="space-y-1.5"><Label htmlFor="portion-unit">Unit</Label><select id="portion-unit" className="h-9 w-full rounded-md border px-3 text-sm" value={unit} onChange={(e) => { const next = e.target.value as PortionUnit; setUnit(next); setAmount(String(portionFromGrams(grams || (dish.reference_serving_g ?? 100), next, dish.reference_serving_g))); }}><option value="servings">Servings</option><option value="grams">Grams</option><option value="ounces">Ounces (weight)</option></select></div>
-                </div>
-                <p className="text-xs text-muted-foreground">1 serving = {dish.reference_serving_g ?? 100} g{dish.reference_serving_g == null ? " (default; edit in My dishes)" : ""}</p>
-                <div className="rounded-xl bg-muted/60 p-3 text-sm tabular-nums" aria-live="polite">
-                  <p className="font-bold">{Math.round(grams * 10) / 10} g · {Math.round(Number(dish.calories_per_100g) * scale)} calories</p>
-                  <p>Protein {dish.protein_g_per_100g == null ? "not entered" : `${(Number(dish.protein_g_per_100g) * scale).toFixed(1)} g`} · Carbs {dish.carbs_g_per_100g == null ? "not entered" : `${(Number(dish.carbs_g_per_100g) * scale).toFixed(1)} g`}</p>
-                  <p>Fat {dish.fat_g_per_100g == null ? "not entered" : `${(Number(dish.fat_g_per_100g) * scale).toFixed(1)} g`} · Fiber {dish.fiber_g_per_100g == null ? "not entered" : `${(Number(dish.fiber_g_per_100g) * scale).toFixed(1)} g`}</p>
-                </div>
-                <Button type="button" variant="secondary" disabled={grams <= 0 || basketPending || basket.length >= 100} onClick={() => {
-                  try {
-                    const weight = portionGrams(amount, unit, dish.reference_serving_g);
-                    setBasket(items => [...items, { id: crypto.randomUUID(), food: savedDishCatalogFood(dish), grams: String(weight) }]);
-                    setError("");
-                  } catch (error) { setError(errorMessage(error)); }
-                }}>Add to meal{basket.length ? ` (${basket.length} added)` : ""}</Button>
-              </>}
-            </Card>
-          ) : (
-            <Card className="gap-3 p-4">
-              <Label htmlFor="food-name">Food or meal name</Label>
-              <Input id="food-name" required placeholder="e.g. Lunch at home" value={name} onChange={(e) => setName(e.target.value)} />
-              {repeat && <div className="space-y-2 rounded-xl bg-muted/60 p-3">
-                <Label htmlFor="repeat-amount">Portions of your previous entry</Label>
-                <Input id="repeat-amount" required type="number" min="0.01" step="any" value={repeatAmount} onChange={e => changeRepeat(e.target.value)} />
-                <div className="flex gap-2">{[0.5, 1, 2].map(amount => <Button key={amount} type="button" variant="secondary" aria-pressed={repeatAmount === String(amount)} onClick={() => changeRepeat(String(amount))}>{amount}×</Button>)}</div>
-                <p className="text-xs text-muted-foreground">1× is the portion you logged previously. Nutrients scale together; you can also edit them individually below.</p>
-              </div>}
-              <Label htmlFor="meal-calories">Calories for the amount you ate</Label>
-              <Input id="meal-calories" required type="number" min="0" step="any" value={values.calories} onChange={(e) => changeValue("calories", e.target.value)} />
-              <MacroInputs values={values} onChange={changeValue} />
-              <p className="text-xs text-muted-foreground">Enter the totals from the label or recipe for your portion.</p>
-              <Button type="button" variant="secondary" disabled={basketPending || basket.length >= 100} onClick={() => {
-                try {
-                  if (repeat) repeatNutrition(repeat, repeatAmount);
-                  const item = quickBasketPortion(repeat ? repeatedFoodName(name, repeatAmount) : name, values);
-                  setBasket(items => [...items, item]); setError("");
-                } catch (error) { setError(errorMessage(error)); }
-              }}>Add to meal{basket.length ? ` (${basket.length} added)` : ""}</Button>
-              <p className="text-xs text-muted-foreground">In the basket, 1 portion equals these entered totals. No weight is assumed.</p>
-            </Card>
-          )}
-          <Button className="h-12 w-full rounded-full" disabled={add.isPending || (mode === "dishes" && !dish)}>{add.isPending ? "Logging…" : "Log food"}</Button>
-          {(error || add.isError) && <p role="alert" className="text-sm text-destructive">{error || errorMessage(add.error)}</p>}
-        </form>
+        </Section>
       )}
+
+      {!category && matchingMeals.length > 0 && (
+        <Section title="Saved meals">
+          {matchingMeals.map((meal) => (
+            <Row key={meal.id} title={meal.name} subtitle={`${savedCalories(meal)} cal · saved meal`} quickLabel={`Log ${meal.name}`} onOpen={() => router.push(`/meals?date=${initialDay}`)} onQuick={() => logSaved(meal)} />
+          ))}
+        </Section>
+      )}
+
+      {!category && matchingDishes.length > 0 && (
+        <Section title={favoritesOnly ? "Favorites" : "My dishes"}>
+          {matchingDishes.map((dish) => {
+            const food = savedDishCatalogFood(dish);
+            return (
+              <Row
+                key={dish.id}
+                title={dish.name}
+                subtitle={foodSubtitle(food)}
+                icon={dish.is_favorite ? <Star className="size-4 shrink-0 fill-carbs text-carbs" /> : undefined}
+                quickLabel={`Log one serving of ${dish.name}`}
+                onOpen={() => show({ kind: "food", key: dish.id, food, dish })}
+                onQuick={() => logFood(food, defaultGrams(food), dish, true)}
+              />
+            );
+          })}
+        </Section>
+      )}
+      {favoritesOnly && !matchingDishes.length && !dishes.isLoading && (
+        <p className="rounded-3xl bg-card p-5 text-center text-sm text-muted-foreground shadow-soft">No favorites yet. Open a dish and tap the star.</p>
+      )}
+
+      {!favoritesOnly && (searching || category) && (
+        catalog === null ? <Skeleton className="h-40 w-full rounded-3xl" /> : matchingCatalog.length > 0 ? (
+          <>
+            <Section title={category || "Catalog"}>
+              {matchingCatalog.slice(0, limit).map((food) => (
+                <Row
+                  key={food.id}
+                  title={food.name}
+                  subtitle={foodSubtitle(food)}
+                  quickLabel={`Log ${food.portions[0]?.label ?? "100 g"} of ${food.name}`}
+                  onOpen={() => show({ kind: "food", key: food.id, food })}
+                  onQuick={() => logFood(food, defaultGrams(food), undefined, true)}
+                />
+              ))}
+            </Section>
+            {matchingCatalog.length > limit && (
+              <button type="button" className="press w-full rounded-full bg-card py-3 text-sm font-semibold shadow-soft ring-1 ring-black/[0.04]" onClick={() => setLimit(limit + 30)}>
+                Show more · {(matchingCatalog.length - limit).toLocaleString()} left
+              </button>
+            )}
+          </>
+        ) : searching && !matchingDishes.length && !matchingRecents.length && !matchingMeals.length && (
+          <div className="space-y-3 rounded-3xl bg-card p-6 text-center shadow-soft">
+            <p className="text-sm text-muted-foreground">Nothing matches “{query.trim()}”.</p>
+            <button type="button" className="press inline-flex h-10 items-center gap-1.5 rounded-full bg-foreground px-5 text-sm font-semibold text-background" onClick={() => show({ kind: "quick", key: crypto.randomUUID(), name: query.trim() })}>
+              <Zap className="size-4" />Quick add “{query.trim()}”
+            </button>
+          </div>
+        )
+      )}
+
+      {!searching && !category && !favoritesOnly && (recent.isLoading || dishes.isLoading) && <Skeleton className="h-48 w-full rounded-3xl" />}
+      {!searching && !category && !favoritesOnly && !recent.isLoading && !dishes.isLoading && !matchingRecents.length && !matchingDishes.length && (
+        <p className="rounded-3xl bg-card p-6 text-center text-sm text-muted-foreground shadow-soft">Search above, or pick a category. Foods you log will show up here for one-tap logging.</p>
+      )}
+      {(recent.isError || dishes.isError) && <p role="alert" className="text-sm text-destructive">{errorMessage(recent.error ?? dishes.error)}</p>}
+
+      <AnimatePresence>
+        {basket.length > 0 && (
+          <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }} transition={{ type: "spring", damping: 26, stiffness: 300 }} className="pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pb-safe">
+            <button type="button" disabled={basketPending} className="press pointer-events-auto mx-auto flex h-14 w-full max-w-sm items-center justify-between rounded-full bg-linear-to-b from-[oklch(0.34_0_0)] to-[oklch(0.14_0_0)] pr-2 pl-6 text-background shadow-float" onClick={() => setBasketOpen(true)}>
+              <span className="text-sm font-semibold tabular-nums">{basket.length} {basket.length === 1 ? "food" : "foods"}{basketCalories !== null ? ` · ${Math.round(basketCalories)} cal` : ""}</span>
+              <span className="rounded-full bg-background px-4 py-2 text-sm font-bold text-foreground">Review meal</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {sheet?.kind === "food" && (
+        <FoodSheet
+          key={sheet.key}
+          food={sheet.food}
+          dish={sheet.dish}
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          mealLabel={mealLabel}
+          basketCount={basket.length}
+          onLog={(grams) => logFood(sheet.food, grams, sheet.dish, false)}
+          onAdd={(grams) => addToBasket({ id: crypto.randomUUID(), food: sheet.food, grams: String(grams) })}
+        />
+      )}
+      {sheet?.kind === "quick" && (
+        <QuickAddSheet
+          key={sheet.key}
+          repeat={sheet.repeat}
+          repeatName={sheet.name}
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          mealLabel={mealLabel}
+          basketCount={basket.length}
+          onLog={(entry) => logQuick(entry, false)}
+          onAdd={(entry) => { try { addToBasket(quickBasketPortion(entry.name, entry.values)); } catch (e) { toast(errorMessage(e)); } }}
+        />
+      )}
+      <CatalogBasket open={basketOpen} onOpenChange={setBasketOpen} items={basket} onChange={setBasket} when={when} setWhen={setWhen} mealType={mealType} setMealType={setMealType} />
+      {(add.isError || copy.isError) && <p role="alert" className="text-sm text-destructive">{errorMessage(add.error ?? copy.error)}</p>}
     </div>
   );
 }

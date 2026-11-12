@@ -1,60 +1,67 @@
 "use client";
+
 import { useState } from "react";
 import { useMutation, onlineManager } from "@tanstack/react-query";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { BookmarkPlus, Copy } from "lucide-react";
 import { useSession } from "./Providers";
+import Sheet from "./Sheet";
+import { toast } from "./Toaster";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import { useWriteSavedMeal } from "@/hooks/useSavedMeals";
 import { saveMealSnapshot } from "@/lib/savedMeals";
 import { COPY_MEAL_KEY, makeMealCopy, type MealCopy } from "@/lib/copyMeal";
+import { MEAL_META } from "@/lib/mealMeta";
 import { initialLogTime, localDateTime, type MealType } from "@/lib/tracking";
 import { localDateISO, errorMessage } from "@/lib/utils";
 import type { Tables } from "@/lib/types";
 
-export default function CopyMeal({ rows, type }: { rows: Tables<"meal_logs">[]; type: MealType }) {
+/** Sheet with the two whole-meal actions: save as a template, or copy elsewhere. */
+export default function CopyMeal({ rows, type, open, onOpenChange }: { rows: Tables<"meal_logs">[]; type: MealType; open: boolean; onOpenChange: (open: boolean) => void }) {
   const session = useSession();
+  const router = useRouter();
   const saved = useWriteSavedMeal();
-  const [saveOpen, setSaveOpen] = useState(false);
+  const copy = useMutation<void, Error, MealCopy>({ mutationKey: COPY_MEAL_KEY });
   const [name, setName] = useState("");
-  const [saveMessage, setSaveMessage] = useState("");
-  const [open, setOpen] = useState(false);
   const [when, setWhen] = useState(() => initialLogTime(localDateISO()));
   const [error, setError] = useState("");
-  const [destination, setDestination] = useState("");
-  const copy = useMutation<void, Error, MealCopy>({ mutationKey: COPY_MEAL_KEY });
-  return <div className="space-y-2">
-    <Button variant="ghost" size="sm" onClick={() => { setOpen(!open); setDestination(""); }}>Copy this meal</Button>
-    <Button variant="ghost" size="sm" onClick={() => { setSaveOpen(!saveOpen); setSaveMessage(""); }}>Save as a meal</Button>
-    {saveOpen && <form className="space-y-3 rounded-xl border p-3" onSubmit={e => {
-      e.preventDefault();
-      try {
-        if (!session) throw new Error("Sign in to save a meal.");
-        const row = saveMealSnapshot(rows, session.user.id, name, type);
-        setError("");
-        saved.mutate({ operation: "add", row }, { onSuccess: () => { setSaveOpen(false); setSaveMessage("Meal saved."); } });
-        if (!onlineManager.isOnline()) { setSaveOpen(false); setSaveMessage("Meal saved on this device, waiting to sync."); }
-      } catch (e) { setError(errorMessage(e)); }
-    }}><Label htmlFor={`save-meal-${type}`}>Meal name</Label><Input id={`save-meal-${type}`} required maxLength={120} placeholder="e.g. My usual breakfast" value={name} onChange={e => setName(e.target.value)} /><Button disabled={saved.isPending && !saved.isPaused}>Save {rows.length} foods</Button></form>}
-    {saved.isError && <p role="alert" className="text-sm text-destructive">{errorMessage(saved.error)}</p>}
-    {saveMessage && !saved.isError && <p role="status" className="text-sm">{saveMessage} <Link href="/meals" className="underline">View saved meals</Link></p>}
-    {open && <form className="space-y-3 rounded-xl border p-3" onSubmit={e => {
-      e.preventDefault();
-      try {
-        if (!session) throw new Error("Sign in to copy a meal.");
-        const input = makeMealCopy(rows, session.user.id, when, type);
-        setError("");
-        const done = () => { setDestination(when.slice(0, 10)); setOpen(false); };
-        copy.mutate(input, { onSuccess: done });
-        if (!onlineManager.isOnline()) done();
-      } catch (e) { setError(errorMessage(e)); }
-    }}>
-      <p className="text-sm">Copy all {rows.length} foods with their current portions and nutrition. Each food stays individually editable.</p>
-      <Label htmlFor={`copy-${type}`}>Date and time for the copy</Label><Input id={`copy-${type}`} required type="datetime-local" max={localDateTime()} value={when} onChange={e => setWhen(e.target.value)} />
-      <Button type="submit" disabled={copy.isPending && !copy.isPaused}>Copy {rows.length} foods</Button>
-    </form>}
-    {(error || copy.isError) && <p role="alert" className="text-sm text-destructive">{error || errorMessage(copy.error)}</p>}
-    {destination && !copy.isError && <p role="status" className="text-sm">{copy.isPaused ? "Copy waiting to sync." : "Meal copied."} <Link className="underline" href={`/?date=${destination}`}>Open destination diary</Link></p>}
-  </div>;
+  const count = `${rows.length} ${rows.length === 1 ? "food" : "foods"}`;
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange} title={MEAL_META[type].label} description={`${count} · ${Math.round(rows.reduce((sum, row) => sum + Number(row.calories), 0))} cal`}>
+      <form className="space-y-3 rounded-3xl bg-muted/50 p-4" onSubmit={(e) => {
+        e.preventDefault();
+        try {
+          if (!session) throw new Error("Sign in to save a meal.");
+          const row = saveMealSnapshot(rows, session.user.id, name, type);
+          setError("");
+          const done = () => { onOpenChange(false); setName(""); toast(`Saved “${row.name}”`, { label: "View", onClick: () => router.push("/meals") }); };
+          saved.mutate({ operation: "add", row }, { onSuccess: done });
+          if (!onlineManager.isOnline()) done();
+        } catch (e) { setError(errorMessage(e)); }
+      }}>
+        <p className="flex items-center gap-2 text-sm font-bold"><BookmarkPlus className="size-4" />Save as a meal</p>
+        <Input className="bg-card" aria-label="Meal name" required maxLength={120} placeholder="e.g. My usual breakfast" value={name} onChange={(e) => setName(e.target.value)} />
+        <Button className="w-full" disabled={saved.isPending && !saved.isPaused}>Save {count}</Button>
+      </form>
+      <form className="space-y-3 rounded-3xl bg-muted/50 p-4" onSubmit={(e) => {
+        e.preventDefault();
+        try {
+          if (!session) throw new Error("Sign in to copy a meal.");
+          const input = makeMealCopy(rows, session.user.id, when, type);
+          setError("");
+          const destination = when.slice(0, 10);
+          const done = () => { onOpenChange(false); toast("Meal copied", { label: "Open day", onClick: () => router.push(`/?date=${destination}`) }); };
+          copy.mutate(input, { onSuccess: done });
+          if (!onlineManager.isOnline()) done();
+        } catch (e) { setError(errorMessage(e)); }
+      }}>
+        <p className="flex items-center gap-2 text-sm font-bold"><Copy className="size-4" />Copy to another time</p>
+        <Input className="bg-card" aria-label="Date and time for the copy" required type="datetime-local" max={localDateTime()} value={when} onChange={(e) => setWhen(e.target.value)} />
+        <Button variant="secondary" className="w-full bg-card" disabled={copy.isPending && !copy.isPaused}>Copy {count}</Button>
+      </form>
+      {(error || copy.isError || saved.isError) && <p role="alert" className="text-sm text-destructive">{error || errorMessage(copy.error ?? saved.error)}</p>}
+    </Sheet>
+  );
 }
