@@ -10,7 +10,7 @@ export default function BackButton() {
       type="button"
       aria-label="Go back"
       onClick={() => (history.length > 1 ? router.back() : router.push("/"))}
-      className="flex size-10 items-center justify-center rounded-full bg-card shadow-soft ring-1 ring-black/[0.04] active:translate-y-px"
+      className="press flex size-10 items-center justify-center rounded-full bg-card shadow-soft ring-1 ring-black/[0.04]"
     >
       <ArrowLeft className="size-5" />
     </button>

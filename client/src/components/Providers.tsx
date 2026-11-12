@@ -21,6 +21,10 @@ import { registerTargetSnapshotDefaults } from "@/lib/targetSnapshots";
 import { registerProfileDefaults } from "@/lib/profileMutations";
 import OfflineBanner from "@/components/OfflineBanner";
 import SyncStatus from "@/components/SyncStatus";
+import Toaster from "@/components/Toaster";
+import WaterDrops from "@/components/WaterDrops";
+import { AnimatePresence, MotionConfig } from "motion/react";
+import Splash, { SPLASH_MS } from "@/components/Splash";
 import { retainUnsyncedCache } from "@/lib/offlineRetention";
 import { migrateLegacyCache } from "@/lib/legacyCache";
 
@@ -33,6 +37,7 @@ const PUBLIC_ROUTES = new Set(["/login", "/reset-password"]);
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [played, setPlayed] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -46,15 +51,25 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const timer = setTimeout(() => setPlayed(true), SPLASH_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     if (!loading && !session && !PUBLIC_ROUTES.has(pathname)) router.replace("/login");
   }, [loading, session, pathname, router]);
 
-  if (loading) return null;
-
+  // The opening scene covers session loading and holds until it has played.
+  const booting = loading || !played;
   const userId = session?.user.id ?? "anon";
+  const visible = !booting && (!!session || PUBLIC_ROUTES.has(pathname));
 
-  if (!session && !PUBLIC_ROUTES.has(pathname)) return null;
-  return <UserData key={userId} session={session}>{children}</UserData>;
+  return (
+    <>
+      <AnimatePresence>{booting && <Splash key="splash" />}</AnimatePresence>
+      {visible && <UserData key={userId} session={session}>{children}</UserData>}
+    </>
+  );
 }
 
 function UserData({ session, children }: { session: Session | null; children: React.ReactNode }) {
@@ -96,7 +111,9 @@ function UserData({ session, children }: { session: Session | null; children: Re
       <AuthContext.Provider value={session}>
         <OfflineBanner />
         <SyncStatus />
-        {children}
+        <MotionConfig reducedMotion="user">{children}</MotionConfig>
+        <Toaster />
+        <WaterDrops />
       </AuthContext.Provider>
     </PersistQueryClientProvider>
   );

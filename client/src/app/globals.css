@@ -34,6 +34,8 @@
   --color-carbs: var(--carbs);
   --color-fat: var(--fat);
   --color-water: var(--water);
+  --color-fiber: var(--fiber);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.03), 0 8px 24px oklch(0 0 0 / 0.05);
   --shadow-float: 0 2px 4px oklch(0 0 0 / 0.08), 0 12px 32px oklch(0 0 0 / 0.14);
 }
@@ -45,6 +47,7 @@
   --carbs: oklch(0.74 0.13 70);
   --fat: oklch(0.65 0.12 252);
   --water: oklch(0.72 0.11 230);
+  --fiber: oklch(0.68 0.13 155);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -83,5 +86,61 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  /* Steppers and sheets replace native number spinners. */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Tactile press feedback for any tappable surface. */
+@utility press {
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s var(--ease-spring);
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@utility shimmer {
+  background: linear-gradient(100deg, var(--muted) 40%, oklch(0.985 0 0) 50%, var(--muted) 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

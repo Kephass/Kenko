@@ -1,5 +1,8 @@
 "use client";
 
+import { motion } from "motion/react";
+import { RING_SPRING } from "@/components/ProgressRing";
+
 export type Ring = { value: number; colorClass: string; overColorClass?: string; label?: string };
 
 // Concentric progress rings in the Apple Fitness style: each ring is a faint
@@ -28,11 +31,11 @@ export default function ActivityRings({
           const over = ring.value > 1;
           // Over budget: fill the whole ring and switch to a warning colour so it
           // never reads like remaining progress.
-          const clamped = over ? 1 : Math.max(0, ring.value);
+          const clamped = over ? 1 : Number.isFinite(ring.value) ? Math.max(0, ring.value) : 0;
           return (
             <g key={i} className={over ? ring.overColorClass ?? "text-destructive" : ring.colorClass}>
               <circle cx={center} cy={center} r={r} fill="none" strokeWidth={stroke} className="stroke-current opacity-15" />
-              <circle
+              <motion.circle
                 cx={center}
                 cy={center}
                 r={r}
@@ -40,8 +43,11 @@ export default function ActivityRings({
                 strokeWidth={stroke}
                 strokeLinecap="round"
                 strokeDasharray={circumference}
-                strokeDashoffset={circumference * (1 - clamped)}
-                className="stroke-current transition-[stroke-dashoffset] duration-500"
+                initial={{ strokeDashoffset: circumference }}
+                animate={{ strokeDashoffset: circumference * (1 - clamped) }}
+                transition={{ ...RING_SPRING, delay: 0.1 + i * 0.12 }}
+                className="stroke-current"
+                style={{ opacity: clamped === 0 ? 0 : 1 }}
               />
             </g>
           );
