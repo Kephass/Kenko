@@ -28,6 +28,25 @@ export function useMealLogsForDay(day: string) {
   });
 }
 
+/** Confirmed logs across local days [start, end], for weekly points. */
+export function useMealLogsForRange(start: string, end: string) {
+  return useQuery({
+    queryKey: ["meal_logs", "range", start, end],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const rows: Pick<Tables<"meal_logs">, "logged_at" | "calories" | "protein_g" | "carbs_g" | "fat_g" | "fiber_g" | "points">[] = [];
+      for (let offset = 0; ; offset += 500) {
+        const { data, error } = await supabase.from("meal_logs").select("logged_at,calories,protein_g,carbs_g,fat_g,fiber_g,points")
+          .eq("confirmed", true).gte("logged_at", dayRange(start).start).lt("logged_at", dayRange(end).end)
+          .order("logged_at").order("id").range(offset, offset + 499);
+        if (error) throw error;
+        rows.push(...data);
+        if (data.length < 500) return rows;
+      }
+    },
+  });
+}
+
 /** Consecutive days with a confirmed log; today counts if logged, else counted from yesterday. */
 export function useLogStreak() {
   const session = useSession();

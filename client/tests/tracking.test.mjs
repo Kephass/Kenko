@@ -12,7 +12,7 @@ import { registerSavedMealDefaults, SAVED_MEAL_KEY, saveMealSnapshot, logSavedMe
 import { registerWaterPreferenceDefaults, WATER_PREFERENCES_KEY, waterPreferenceQueryKey, latestWaterPreferences } from '../src/lib/waterPreferenceMutations.ts';
 import { targetsOnDay, validateGoals, registerTargetSnapshotDefaults, TARGET_SNAPSHOT_KEY } from '../src/lib/targetSnapshots.ts';
 import { registerProfileDefaults, PROFILE_WRITE_KEY, validateProfileWrite, mergeProfile } from '../src/lib/profileMutations.ts';
-import { smartFoodPoints, pointsBudget, isZeroPointFood, mealPoints, dayPoints } from '../src/lib/points.ts';
+import { smartFoodPoints, pointsBudget, isZeroPointFood, mealPoints, dayPoints, weekStartISO, weeklyPoints, weekPointsDays, WEEKLY_ALLOWANCE } from '../src/lib/points.ts';
 import { database } from './supabase.mock.mjs';
 
 let qc;
@@ -1034,4 +1034,51 @@ test('consistency and fiber achievements count qualifying days in the window', (
   const list = achievements(0, data, 25);
   assert.equal(list.find(a => a.id === 'days-20').earned, true); // 22 logged days
   assert.equal(list.find(a => a.id === 'fiber-7').earned, true); // 8 days at/above the fiber goal
+});
+
+test('zero-point covers whole or plainly cooked produce, not dried, sweetened, fried or fatty forms', () => {
+  const zero = (category, name, calories) => isZeroPointFood({ category, name, nutrition: { calories } });
+  assert.equal(zero('Fruits', 'Blueberries, frozen, unsweetened', 51), true);
+  assert.equal(zero('Fruits', 'Durian, raw or frozen', 147), true);
+  assert.equal(zero('Vegetables', 'Squash, winter, acorn, raw', 40), true);
+  assert.equal(zero('Vegetables', 'Broccoli, cooked, boiled, drained, with salt', 35), true);
+  for (const [category, name, calories] of [
+    ['Fruits', 'Raisins, golden, seedless', 302], ['Fruits', 'Apples, dehydrated (low moisture), sulfured, stewed', 74],
+    ['Fruits', 'Mango nectar, canned', 51], ['Fruits', 'Plantains, yellow, fried, Latino restaurant', 236],
+    ['Fruits', 'Plantains, yellow, raw', 122], ['Fruits', 'Avocados, raw, California', 167],
+    ['Fruits', 'Rhubarb, frozen, cooked, with sugar', 116], ['Fruits', 'Maraschino cherries, canned, drained', 165],
+    ['Vegetables', 'Onion rings, breaded, par fried, frozen, unprepared', 258], ['Vegetables', 'Peppers, sweet, red, sauteed', 133],
+    ['Vegetables', 'Tomatoes, sun-dried, packed in oil, drained', 213], ['Vegetables', 'Carrot juice, canned', 40],
+    ['Vegetables', 'Peas, green, raw', 81], ['Vegetables', 'Garlic, raw', 149],
+  ]) assert.equal(zero(category, name, calories), false, name);
+});
+
+test('weekly points add capped rollover from logged days and absorb overspend', () => {
+  assert.equal(weekStartISO('2026-11-13'), '2026-11-09');
+  assert.equal(weekStartISO('2026-11-09'), '2026-11-09');
+  assert.equal(weekStartISO('2026-11-15'), '2026-11-09');
+  const days = [
+    { day: '2026-11-08', budget: 40, spent: 90, logged: true }, // previous week: ignored
+    { day: '2026-11-09', budget: 40, spent: 30, logged: true }, // 10 unused, capped at 4
+    { day: '2026-11-10', budget: 40, spent: 0, logged: false }, // nothing logged: no rollover
+    { day: '2026-11-11', budget: 40, spent: 38, logged: true }, // 2 unused
+    { day: '2026-11-12', budget: 40, spent: 45, logged: true }, // 5 over
+    { day: '2026-11-13', budget: 40, spent: 10, logged: true }, // today: not rolled over yet
+  ];
+  assert.deepEqual(weeklyPoints(days, '2026-11-13'), { allowance: WEEKLY_ALLOWANCE + 6, rolledOver: 6, used: 5, left: WEEKLY_ALLOWANCE + 1 });
+  // Today's own overspend draws the bank down immediately.
+  assert.equal(weeklyPoints([{ day: '2026-11-09', budget: 40, spent: 60, logged: true }], '2026-11-09').left, WEEKLY_ALLOWANCE - 20);
+});
+
+test('week points days bucket rows by local day from Monday to the chosen day', () => {
+  const rows = [
+    { logged_at: '2026-11-09T08:00:00+01:00', calories: 400, points: null },
+    { logged_at: '2026-11-09T23:30:00+01:00', calories: 80, points: 0 },
+    { logged_at: '2026-11-11T12:00:00+01:00', calories: 200, points: 7 },
+  ];
+  assert.deepEqual(weekPointsDays(rows, '2026-11-11', () => 40), [
+    { day: '2026-11-09', budget: 40, spent: 10, logged: true },
+    { day: '2026-11-10', budget: 40, spent: 0, logged: false },
+    { day: '2026-11-11', budget: 40, spent: 7, logged: true },
+  ]);
 });

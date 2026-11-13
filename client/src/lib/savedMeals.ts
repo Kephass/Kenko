@@ -4,7 +4,7 @@ import { supabase } from "./supabase";
 import { finiteNumber, MEAL_TYPES, repeatNutrition, nutritionInput, type MealType } from "./tracking";
 import { makeMealCopy } from "./copyMeal";
 import { smartFoodPoints } from "./points";
-export type SavedFood = { name: string; calories: number; protein_g: number | null; carbs_g: number | null; fat_g: number | null; fiber_g: number | null };
+export type SavedFood = { name: string; calories: number; protein_g: number | null; carbs_g: number | null; fat_g: number | null; fiber_g: number | null; points?: 0 };
 export type SavedMeal = Tables<"saved_meals">;
 export type SavedMealWrite = { operation: "add" | "update" | "delete"; row: SavedMeal };
 export const SAVED_MEAL_KEY = ["saved_meals", "write"] as const;
@@ -17,13 +17,13 @@ export function parseSavedFoods(value: unknown): SavedFood[] {
       if (typeof item[key] !== "number") throw new Error("Saved nutrients are invalid.");
       return finiteNumber(item[key], "Nutrition");
     };
-    return { name: item.name.trim(), calories: finiteNumber(item.calories, "Calories"), protein_g: optional("protein_g"), carbs_g: optional("carbs_g"), fat_g: optional("fat_g"), fiber_g: optional("fiber_g") };
+    return { name: item.name.trim(), calories: finiteNumber(item.calories, "Calories"), protein_g: optional("protein_g"), carbs_g: optional("carbs_g"), fat_g: optional("fat_g"), fiber_g: optional("fiber_g"), ...(item.points === 0 ? { points: 0 as const } : {}) };
   });
 }
 export function saveMealSnapshot(rows: Tables<"meal_logs">[], userId: string, name: string, type: MealType): SavedMeal {
   const foods = rows.map(row => {
     if (row.user_id !== userId || !row.confirmed) throw new Error("Only your confirmed foods can be saved.");
-    return { name: row.raw_text_input || "Food", calories: Number(row.calories), protein_g: row.protein_g ?? null, carbs_g: row.carbs_g ?? null, fat_g: row.fat_g ?? null, fiber_g: row.fiber_g ?? null };
+    return { name: row.raw_text_input || "Food", calories: Number(row.calories), protein_g: row.protein_g ?? null, carbs_g: row.carbs_g ?? null, fat_g: row.fat_g ?? null, fiber_g: row.fiber_g ?? null, ...(Number(row.points) === 0 && row.points != null ? { points: 0 as const } : {}) };
   });
   return validateSavedMeal({ id: crypto.randomUUID(), user_id: userId, name, meal_type: type, foods, created_at: new Date().toISOString() });
 }
@@ -47,7 +47,7 @@ export function savedMealPreview(value: unknown, multiplier: string) {
 export function logSavedMeal(row: SavedMeal, userId: string, multiplier: string, when: string, type: MealType) {
   if (row.user_id !== userId) throw new Error("This saved meal belongs to another account.");
   const rows: Tables<"meal_logs">[] = savedMealPreview(row.foods, multiplier).foods.map((food, index) => ({
-    id: String(index), user_id: userId, raw_text_input: food.name, calories: food.calories, protein_g: food.protein_g, carbs_g: food.carbs_g, fat_g: food.fat_g, fiber_g: food.fiber_g, points: smartFoodPoints(food),
+    id: String(index), user_id: userId, raw_text_input: food.name, calories: food.calories, protein_g: food.protein_g, carbs_g: food.carbs_g, fat_g: food.fat_g, fiber_g: food.fiber_g, points: food.points === 0 ? 0 : smartFoodPoints(food),
     created_at: row.created_at, logged_at: row.created_at, meal_type: type, confirmed: true, source: "manual",
     dish_id: null, dishware_id: null, portion_ratio: null, photo_url: null, match_confidence: null,
   }));

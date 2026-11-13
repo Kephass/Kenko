@@ -20,12 +20,12 @@ import { useDishes } from "@/hooks/useDishes";
 import { useSavedMeals } from "@/hooks/useSavedMeals";
 import { useCatalogDraft } from "@/hooks/useCatalogDraft";
 import { CATALOG_CATEGORIES, useCatalogFoods } from "@/hooks/useCatalogFoods";
-import { basketTotals, catalogNutrition, quickBasketPortion, savedDishCatalogFood, searchCatalog, type BasketPortion, type CatalogFood } from "@/lib/catalog";
+import { basketTotals, catalogNutrition, quickBasketPortion, savedDishCatalogFood, dishCatalogSource, searchCatalog, type BasketPortion, type CatalogFood } from "@/lib/catalog";
 import { COPY_MEAL_KEY, type MealCopy } from "@/lib/copyMeal";
 import { matchesLibrarySearch } from "@/lib/librarySearch";
 import { MEAL_META, MEAL_OPTIONS } from "@/lib/mealMeta";
 import type { ManualMealInput } from "@/lib/mealLogMutations";
-import { isZeroPointFood } from "@/lib/points";
+import { isZeroPointFood, smartFoodPoints } from "@/lib/points";
 import { logSavedMeal, parseSavedFoods, type SavedMeal } from "@/lib/savedMeals";
 import { diaryDate, localDateTime, logTimestamp, measuredFoodName, MEAL_TYPES, nutritionInput, repeatNutrition, type MealType } from "@/lib/tracking";
 import type { Tables } from "@/lib/types";
@@ -160,7 +160,7 @@ function FoodLogger({ initialDay, initialMeal }: { initialDay: string; initialMe
       logEntry({
         ...nutrition,
         raw_text_input: `${measuredFoodName(food.name, grams)}${food.estimated && !dish ? " (estimate)" : ""}`,
-        ...(isZeroPointFood(food) ? { points: 0 } : {}),
+        ...(isZeroPointFood((dish && dishCatalogSource(dish, catalog)) || food) ? { points: 0 } : {}),
         ...(dish ? { dish_id: dish.id, portion_ratio: grams / Number(dish.reference_serving_g ?? 100) } : {}),
       }, stay);
     } catch (e) { toast(errorMessage(e)); }
@@ -183,9 +183,10 @@ function FoodLogger({ initialDay, initialMeal }: { initialDay: string; initialMe
     toast("Added to your meal", { label: "Review", onClick: () => setBasketOpen(true) });
   }
   const defaultGrams = (food: CatalogFood) => food.portions[0]?.grams ?? 100;
-  const foodSubtitle = (food: CatalogFood) => {
+  const foodSubtitle = (food: CatalogFood, dish?: Dish) => {
     const grams = defaultGrams(food);
-    return `${Math.round(food.nutrition.calories * grams / 100)} cal · ${food.portions[0]?.label ?? "100 g"}${food.estimated ? " · estimate" : ""}`;
+    const points = isZeroPointFood((dish && dishCatalogSource(dish, catalog)) || food) ? 0 : smartFoodPoints(nutritionInput(catalogNutrition(food, grams)));
+    return `${Math.round(food.nutrition.calories * grams / 100)} cal · ${points} pts · ${food.portions[0]?.label ?? "100 g"}${food.estimated ? " · estimate" : ""}`;
   };
   const savedCalories = (meal: SavedMeal) => {
     try { return Math.round(parseSavedFoods(meal.foods).reduce((sum, food) => sum + food.calories, 0)); } catch { return 0; }
@@ -270,7 +271,7 @@ function FoodLogger({ initialDay, initialMeal }: { initialDay: string; initialMe
               <Row
                 key={dish.id}
                 title={dish.name}
-                subtitle={foodSubtitle(food)}
+                subtitle={foodSubtitle(food, dish)}
                 icon={dish.is_favorite ? <Star className="size-4 shrink-0 fill-carbs text-carbs" /> : undefined}
                 quickLabel={`Log one serving of ${dish.name}`}
                 onOpen={() => show({ kind: "food", key: dish.id, food, dish })}

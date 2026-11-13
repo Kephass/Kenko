@@ -109,6 +109,13 @@ export function savedDishCatalogFood(dish: Tables<"dishes">): CatalogFood {
   };
 }
 
+/** The catalog food a library dish was saved from, if its nutrition is unedited. */
+export function dishCatalogSource(dish: Tables<"dishes">, catalog: CatalogFood[] | null | undefined): CatalogFood | undefined {
+  const id = dish.notes?.split("\n")[0].match(/^Kenko catalog: (.+)$/)?.[1];
+  const source = id ? catalog?.find(food => food.id === id) : undefined;
+  return source && Number(dish.calories_per_100g) === source.nutrition.calories ? source : undefined;
+}
+
 export const BASKET_NUTRIENTS = ["protein", "carbs", "fat", "fiber"] as const;
 export function basketTotals(items: BasketPortion[]) {
   const totals = { calories: 0, nutrients: Object.fromEntries(BASKET_NUTRIENTS.map(key => [key, { total: 0, missing: 0 }])) as Record<typeof BASKET_NUTRIENTS[number], { total: number; missing: number }> };

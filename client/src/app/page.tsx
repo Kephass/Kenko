@@ -17,7 +17,7 @@ import WeekStrip, { weekStripDays } from "@/components/WeekStrip";
 import CopyMeal from "@/components/CopyMeal";
 import MealEditSheet from "@/components/MealEditSheet";
 import QuickWater from "@/components/QuickWater";
-import { dayPoints, pointsBudget, mealPoints } from "@/lib/points";
+import { dayPoints, pointsBudget, mealPoints, weekStartISO, weekPointsDays, weeklyPoints } from "@/lib/points";
 import { MACROS } from "@/lib/macros";
 import { MEAL_META } from "@/lib/mealMeta";
 import { useProfile } from "@/hooks/useProfile";
@@ -26,7 +26,7 @@ import { diaryDate, hasMissingNutrients, MEAL_TYPES, type MealType } from "@/lib
 import type { Tables } from "@/lib/types";
 import { errorMessage, formatTime, localDateISO, addDays } from "@/lib/utils";
 import { useWeeklyBalance } from "@/hooks/useWeeklyBalance";
-import { useLogStreak, useMealLogsForDay } from "@/hooks/useMealLogs";
+import { useLogStreak, useMealLogsForDay, useMealLogsForRange } from "@/hooks/useMealLogs";
 import { useDailySummary } from "@/hooks/useDailySummary";
 
 type Meal = Tables<"meal_logs">;
@@ -181,13 +181,22 @@ function Diary({ selectedDay, direction, onSelect }: { selectedDay: string; dire
     { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 },
   );
 
-  const targetHistory = useTargetHistory(selectedDay < weekStart ? selectedDay : weekStart, today);
+  const pointsWeekStart = weekStartISO(selectedDay);
+  const targetHistory = useTargetHistory(pointsWeekStart < weekStart ? pointsWeekStart : weekStart, today);
   const recordedGoals = targetHistory.forDay(selectedDay);
   const goals = recordedGoals ?? targetHistory.current;
   const caloriesLeft = Math.round(goals.calorieTarget - eaten.calories);
   const eatenPoints = dayPoints(confirmed);
   const pointsTarget = pointsBudget(goals.calorieTarget);
   const pointsLeft = pointsTarget - eatenPoints;
+  // Weeklies: earlier days come from the week query, the open day from live rows.
+  const weekLogs = useMealLogsForRange(pointsWeekStart, selectedDay);
+  const weeklies = weeklyPoints(
+    weekPointsDays(weekLogs.data, selectedDay, (d) => pointsBudget((targetHistory.forDay(d) ?? targetHistory.current).calorieTarget))
+      .map((d) => (d.day === selectedDay ? { ...d, budget: pointsTarget, spent: eatenPoints, logged: confirmed.length > 0 } : d)),
+    selectedDay,
+  );
+  const pointsCovered = pointsLeft < 0 && weeklies.left >= 0;
   const totalsPending = meals.isPending || profile.isPending || balance.isPending || (!isToday && targetHistory.isPending);
   const totalsFailed = meals.isError || profile.isError || balance.isError || (!isToday && targetHistory.isError);
   const ratios = Object.fromEntries(
@@ -304,12 +313,15 @@ function Diary({ selectedDay, direction, onSelect }: { selectedDay: string; dire
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-2xl bg-muted/60 p-3">
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span className={`size-2 rounded-full ${pointsLeft >= 0 ? "bg-water" : "bg-destructive"}`} aria-hidden />
-                    {pointsLeft >= 0 ? "Points left" : "Points over"}
+                    <span className={`size-2 rounded-full ${pointsLeft >= 0 || pointsCovered ? "bg-water" : "bg-destructive"}`} aria-hidden />
+                    {pointsLeft >= 0 ? "Points left" : pointsCovered ? "From weeklies" : "Points over"}
                   </p>
                   <p className="text-xl font-extrabold tabular-nums">
-                    <AnimatedNumber value={Math.abs(pointsLeft)} />
-                    <span className="text-xs font-semibold text-muted-foreground"> of {pointsTarget}</span>
+                    <AnimatedNumber value={Math.abs(pointsCovered || pointsLeft >= 0 ? pointsLeft : weeklies.left)} />
+                    {(pointsCovered || pointsLeft >= 0) && <span className="text-xs font-semibold text-muted-foreground"> of {pointsTarget}</span>}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+                    {weekLogs.isPending ? "Weeklies…" : weekLogs.isError ? "Weeklies unavailable" : weeklies.left >= 0 ? `${weeklies.left} weekly left${weeklies.rolledOver ? ` · ${weeklies.rolledOver} rolled over` : ""}` : "Weeklies used up"}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-muted/60 p-3">
